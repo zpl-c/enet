@@ -1,0 +1,29 @@
+{
+  "name": "enet.c",
+  "version": "1.3.13",
+  "description": "ENet reliable UDP networking library Edit",
+  "main": "include/enet/enet.h",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zpl-c/enet-c.git"
+  },
+  "keywords": [
+    "udp",
+    "networking",
+    "c",
+    "cpp",
+    "c++"
+  ],
+  "author": "Lee Salzman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zpl-c/enet-c/issues"
+  },
+  "homepage": "https://github.com/zpl-c/enet-c#readme"
+}
