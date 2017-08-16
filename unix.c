@@ -62,7 +62,7 @@ typedef int socklen_t;
 #define MSG_NOSIGNAL 0
 #endif
 
-static enet_uint32 timeBase = 0;
+static enet_uint64 timeBase = 0;
 
 int
 enet_initialize (void)
@@ -75,13 +75,13 @@ enet_deinitialize (void)
 {
 }
 
-enet_uint32
+enet_uint64
 enet_host_random_seed (void)
 {
     return (enet_uint32) time (NULL);
 }
 
-enet_uint32
+enet_uint64
 enet_time_get (void)
 {
     struct timeval timeVal;
@@ -92,7 +92,7 @@ enet_time_get (void)
 }
 
 void
-enet_time_set (enet_uint32 newTimeBase)
+enet_time_set (enet_uint64 newTimeBase)
 {
     struct timeval timeVal;
 
@@ -525,7 +525,7 @@ enet_socketset_select (ENetSocket maxSocket, ENetSocketSet * readSet, ENetSocket
 }
 
 int
-enet_socket_wait (ENetSocket socket, enet_uint32 * condition, enet_uint32 timeout)
+enet_socket_wait (ENetSocket socket, enet_uint32 * condition, enet_uint64 timeout)
 {
 #ifdef HAS_POLL
     struct pollfd pollSocket;
