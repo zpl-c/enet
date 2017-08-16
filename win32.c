@@ -41,10 +41,10 @@ enet_deinitialize (void)
     WSACleanup ();
 }
 
-enet_uint32
+enet_uint64
 enet_host_random_seed (void)
 {
-    return (enet_uint32) timeGetTime ();
+    return (enet_uint64) timeGetTime ();
 }
 
 enet_uint64
