@@ -1,5 +1,5 @@
 /**
- * includes/enet.h - a Single-Header auto-generated variant of enet.h library.
+ * include/enet.h - a Single-Header auto-generated variant of enet.h library.
  *
  * Usage:
  * #define ENET_IMPLEMENTATION exactly in ONE source file right BEFORE including the library, like:
@@ -8,6 +8,10 @@
  * #include <enet.h>
  *
  */
+
+#ifdef ENET_IMPLEMENTATION
+#define ENET_BUILDING_LIB 1
+#endif
 
 /**
  @file  enet.h
@@ -1020,8 +1024,6 @@ extern size_t enet_protocol_command_size (enet_uint8);
 
 #if defined(ENET_IMPLEMENTATION) && !defined(ENET_IMPLEMENTATION_DONE)
 #define ENET_IMPLEMENTATION_DONE
-
-    #define ENET_BUILDING_LIB 1
 
     #ifdef __cplusplus
     extern "C"

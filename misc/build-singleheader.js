@@ -80,8 +80,6 @@ let scr_template = [
 #if defined(ENET_IMPLEMENTATION) && !defined(ENET_IMPLEMENTATION_DONE)
 #define ENET_IMPLEMENTATION_DONE
 
-    #define ENET_BUILDING_LIB 1
-
     #ifdef __cplusplus
     extern "C"
     {
@@ -110,6 +108,10 @@ let prefix =
  *
  */
 
+#ifdef ENET_IMPLEMENTATION
+#define ENET_BUILDING_LIB 1
+#endif
+
 `;
 
 (function main() {
@@ -119,6 +121,9 @@ let prefix =
     src = include_enet(src)
     src = filter_libs(src, list)
     src = attach_src(src, list, sources, scr_template)
+
+    console.log(list)
+    // console.log('all included libs:\n', Object.keys(list).sort())
 
     fs.writeFileSync('include/enet.h', prefix + src)
 })();
