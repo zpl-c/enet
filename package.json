@@ -1,10 +1,10 @@
 {
   "name": "enet.c",
   "version": "1.4.0",
-  "description": "ENet reliable UDP networking library Edit",
-  "main": "include/enet/enet.h",
+  "description": "ENet - Simple, lightweight and reliable UDP networking library written on pure C.",
+  "main": "include/enet.h",
   "directories": {
-    "doc": "docs"
+    "doc": "misc/docs"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
