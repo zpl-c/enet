@@ -1,6 +1,6 @@
 {
   "name": "enet.c",
-  "version": "1.4",
+  "version": "1.4.0",
   "description": "ENet reliable UDP networking library Edit",
   "main": "include/enet/enet.h",
   "directories": {
