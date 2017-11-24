@@ -1,5 +1,5 @@
 <div align="center">
-<h1 style="font-size: 30pt">ENet<span style="font-weight: 100"> | a thunderbolt via UDP</h1>
+    <a href="https://github.com/zpl-c/enet"><img src="https://user-images.githubusercontent.com/2182108/33219675-6150f8a8-d14c-11e7-9081-a9be1945bfb1.png" alt="ENet" /></a>
 </div>
 
 <br>
