@@ -21,6 +21,8 @@ extern "C"
 #include "enet/types.h"
 #include "enet/protocol.h"
 #include "enet/list.h"
+#include "enet/time.h"
+#include "enet/utility.h"
 #include "enet/callbacks.h"
 
 #define ENET_VERSION_MAJOR 1
