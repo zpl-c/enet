@@ -11,6 +11,7 @@ function include_enet(src) {
     return src
         .split('\n')
         .map(line => {
+            // include enet header files for header
             if (line.indexOf('#include "enet/') !== -1) {
                 return read_file('include/' + line.slice(10, -1))
             }
@@ -24,10 +25,12 @@ function filter_libs(src, unqiue_lib_list) {
     return src
         .split('\n')
         .map((line, i) => {
+            // remove references to enet across all file
             if (line.indexOf('#include "enet/') !== -1) {
                 return ''
             }
 
+            // reduce amount of includes to get rid of dublications
             if (line.indexOf('#include <') !== -1) {
                 if (!unqiue_lib_list[line.slice(10, -1)]) {
                     unqiue_lib_list[line.slice(10, -1)] = 1;
@@ -38,7 +41,9 @@ function filter_libs(src, unqiue_lib_list) {
                 }
             }
 
-            return line.replace(/\s*$/, '')
+            return line
+                .replace(/\s*$/, '') /* remove trailing spaces */
+                .replace(/^\s{3}(\w)/, '    $1') /* make sure all tabulated lines have minumun 4 spaces */
         })
         .join('\n')
 }
@@ -64,15 +69,15 @@ function attach_src(src, unqiue_lib_list, sources_list, scr_template) {
 }
 
 let sources = [
-    'callbacks.c',
-    'compress.c',
-    'host.c',
-    'list.c',
-    'packet.c',
-    'peer.c',
-    'protocol.c',
-    'unix.c',
-    'win32.c',
+    'src/callbacks.c',
+    'src/compress.c',
+    'src/host.c',
+    'src/list.c',
+    'src/packet.c',
+    'src/peer.c',
+    'src/protocol.c',
+    'src/unix.c',
+    'src/win32.c',
 ]
 
 let scr_template = [

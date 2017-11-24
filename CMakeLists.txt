@@ -71,15 +71,15 @@ set(INCLUDE_FILES
 )
 
 set(SOURCE_FILES
-    callbacks.c
-    compress.c
-    host.c
-    list.c
-    packet.c
-    peer.c
-    protocol.c
-    unix.c
-    win32.c)
+    src/callbacks.c
+    src/compress.c
+    src/host.c
+    src/list.c
+    src/packet.c
+    src/peer.c
+    src/protocol.c
+    src/unix.c
+    src/win32.c)
 
 source_group(include FILES ${INCLUDE_FILES})
 source_group(source FILES ${SOURCE_FILES})
