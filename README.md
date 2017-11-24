@@ -1,27 +1,143 @@
-# ENet
+<div align="center">
+<h1 style="font-size: 30pt">ENet<span style="font-weight: 100"> | a thunderbolt via UDP</h1>
+</div>
 
-It is a mirror/fork of original repo, with npm package support.
+<br>
 
-## Installation
+<div align="center">
+    <a href="https://travis-ci.org/zpl-c/enet"><img src="https://travis-ci.org/zpl-c/enet.svg" alt="Build status" /></a>
+    <a href="https://www.npmjs.com/package/enet.c"><img src="https://img.shields.io/npm/v/enet.c.svg?maxAge=3600" alt="NPM version" /></a>
+    <a href="https://discord.gg/2fZVEym"><img src="https://discordapp.com/api/guilds/354670964400848898/embed.png" alt="Discord server" /></a>
+    <a href="LICENSE"><img src="https://img.shields.io/github/license/zpl-c/enet.svg" alt="license" /></a>
+</div>
+
+<br style="line-height: 10px" />
+
+<div align="center">
+  ENet - Simple, lightweight and reliable UDP networking library written on pure C
+</div>
+
+<div align="center">
+  <sub>
+    Brought to you by
+    <a href="https://github.com/lsalzman">@lsalzman</a>,
+    <a href="https://github.com/inlife">@inlife</a>,
+    <a href="https://github.com/zaklaus">@zaklaus</a>
+    and other contributors!
+  </sub>
+</div>
+
+<hr/>
+
+## Disclaimer
+
+This is a fork of the original library [lsalzman/enet](https://github.com/lsalzman/enet). While original repo offers a stable, time-tested wonderful library,
+we are trying to change some things, things, which can't be reflected on the main repo, like:
+
+* NPM package distribution
+* Single-Header style code
+* Removed some config/make files
+* Project/Code cleanup
+* And other various changes
+
+## Description
+
+ENet's purpose is to provide a relatively thin, simple and robust network communication
+layer on top of UDP (User Datagram Protocol).The primary feature it provides is optional
+reliable, in-order delivery of packets.
+
+ENet omits certain higher level networking features such as authentication, lobbying,
+server discovery, encryption, or other similar tasks that are particularly application
+specific so that the library remains flexible, portable, and easily embeddable.
+
+## Installation (via npm)
+
+Install library using (omit `--save` if you dont have npm project initilized)
 
 ```sh
 $ npm install enet.c --save
 ```
 
-## Original README:
+Add include path to the library `node_modules/enet.c/include` to your makefile/
 
-Please visit the ENet homepage at http://enet.bespin.org for installation
-and usage instructions.
+## Installation (manually)
 
-If you obtained this package from github, the quick description on how to build
-is:
+Dowload file [include/enet.h](https://raw.githubusercontent.com/zpl-c/enet/master/include/enet.h) and just add to your project.
 
-# Generate the build system.
+## Usage
 
-autoreconf -vfi
+Make sure you add a define for `ENET_IMPLEMENTATION` before including the `enet.h`.
 
-# Compile and install the library.
+Here is a simple server demo, it will wait 1 second for events, and then exit if none were found:
 
-./configure && make && make install
+```c
+#define ENET_IMPLEMENTATION
+#include <enet.h>
+
+int main() {
+    if (enet_initialize () != 0) {
+        printf("An error occurred while initializing ENet.\n");
+        return 1;
+    }
+
+    ENetAddress address = {0};
+
+    address.host = ENET_HOST_ANY; /* Bind the server to the default localhost.     */
+    address.port = 7777; /* Bind the server to port 7777. */
+
+    #define MAX_CLIENTS 32
+
+    /* create a server */
+    ENetHost * server = enet_host_create(&address, MAX_CLIENTS, 2, 0, 0);
+
+    if (server == NULL) {
+        printf("An error occurred while trying to create an ENet server host.\n");
+        return 1;
+    }
+
+    printf("Started a server...\n");
+
+    ENetEvent event;
+
+    /* Wait up to 1000 milliseconds for an event. (WARNING: blocking) */
+    while (enet_host_service(server, &event, 1000) > 0) {
+        switch (event.type) {
+            case ENET_EVENT_TYPE_CONNECT:
+                printf("A new client connected from %x:%u.\n",  event.peer->address.host, event.peer->address.port);
+                /* Store any relevant client information here. */
+                event.peer->data = "Client information";
+                break;
+            case ENET_EVENT_TYPE_RECEIVE:
+                printf("A packet of length %lu containing %s was received from %s on channel %u.\n",
+                        event.packet->dataLength,
+                        event.packet->data,
+                        event.peer->data,
+                        event.channelID);
+
+                /* Clean up the packet now that we're done using it. */
+                enet_packet_destroy (event.packet);
+                break;
+
+            case ENET_EVENT_TYPE_DISCONNECT:
+                printf ("%s disconnected.\n", event.peer->data);
+                /* Reset the peer's client information. */
+                event.peer->data = NULL;
+                break;
+
+            case ENET_EVENT_TYPE_NONE: break;
+        }
+    }
+
+    enet_host_destroy(server);
+    enet_deinitialize();
+    return 0;
+}
+
+```
+
+## Tutorials
+
+More information, examples and tutorials can be found at the official site: http://enet.bespin.org/
+
 
 
