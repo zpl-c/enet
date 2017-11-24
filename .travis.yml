@@ -1,0 +1,8 @@
+language: c
+compiler:
+  - gcc
+
+script:
+  - mkdir build
+  - gcc -O3 -I include/ -DHAS_SOCKLEN_T=1 test/build.c -o build/build.o
+  - build/build.o
