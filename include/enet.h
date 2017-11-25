@@ -443,7 +443,7 @@ extern void   enet_free (void *);
 
 #define ENET_VERSION_MAJOR 1
 #define ENET_VERSION_MINOR 4
-#define ENET_VERSION_PATCH 0
+#define ENET_VERSION_PATCH 1
 #define ENET_VERSION_CREATE(major, minor, patch) (((major)<<16) | ((minor)<<8) | (patch))
 #define ENET_VERSION_GET_MAJOR(version) (((version)>>16)&0xFF)
 #define ENET_VERSION_GET_MINOR(version) (((version)>>8)&0xFF)
@@ -971,6 +971,7 @@ ENET_API int enet_address_get_host (const ENetAddress * address, char * hostName
 /** @} */
 
 ENET_API ENetPacket * enet_packet_create (const void *, size_t, enet_uint32);
+ENET_API ENetPacket * enet_packet_create_offset (const void *, size_t, size_t, enet_uint32);
 ENET_API void         enet_packet_destroy (ENetPacket *);
 ENET_API int          enet_packet_resize  (ENetPacket *, size_t);
 ENET_API enet_uint32  enet_crc32 (const ENetBuffer *, size_t);
@@ -2351,6 +2352,40 @@ extern size_t enet_protocol_command_size (enet_uint8);
 
            if (data != NULL)
              memcpy (packet -> data, data, dataLength);
+        }
+
+        packet -> referenceCount = 0;
+        packet -> flags = flags;
+        packet -> dataLength = dataLength;
+        packet -> freeCallback = NULL;
+        packet -> userData = NULL;
+
+        return packet;
+    }
+
+    ENetPacket *
+    enet_packet_create_offset (const void * data, size_t dataLength, size_t dataOffset, enet_uint32 flags)
+    {
+        ENetPacket * packet = (ENetPacket *) enet_malloc (sizeof (ENetPacket));
+        if (packet == NULL)
+          return NULL;
+
+        if (flags & ENET_PACKET_FLAG_NO_ALLOCATE)
+          packet -> data = (enet_uint8 *) data;
+        else
+        if (dataLength <= 0)
+          packet -> data = NULL;
+        else
+        {
+           packet -> data = (enet_uint8 *) enet_malloc (dataLength + dataOffset);
+           if (packet -> data == NULL)
+           {
+              enet_free (packet);
+              return NULL;
+           }
+
+           if (data != NULL)
+             memcpy (packet -> data + dataOffset, data, dataLength);
         }
 
         packet -> referenceCount = 0;

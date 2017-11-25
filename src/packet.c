@@ -50,6 +50,40 @@ enet_packet_create (const void * data, size_t dataLength, enet_uint32 flags)
     return packet;
 }
 
+ENetPacket *
+enet_packet_create_offset (const void * data, size_t dataLength, size_t dataOffset, enet_uint32 flags)
+{
+    ENetPacket * packet = (ENetPacket *) enet_malloc (sizeof (ENetPacket));
+    if (packet == NULL)
+      return NULL;
+
+    if (flags & ENET_PACKET_FLAG_NO_ALLOCATE)
+      packet -> data = (enet_uint8 *) data;
+    else
+    if (dataLength <= 0)
+      packet -> data = NULL;
+    else
+    {
+       packet -> data = (enet_uint8 *) enet_malloc (dataLength + dataOffset);
+       if (packet -> data == NULL)
+       {
+          enet_free (packet);
+          return NULL;
+       }
+
+       if (data != NULL)
+         memcpy (packet -> data + dataOffset, data, dataLength);
+    }
+
+    packet -> referenceCount = 0;
+    packet -> flags = flags;
+    packet -> dataLength = dataLength;
+    packet -> freeCallback = NULL;
+    packet -> userData = NULL;
+
+    return packet;
+}
+
 /** Destroys the packet and deallocates its data.
     @param packet packet to be destroyed
 */
