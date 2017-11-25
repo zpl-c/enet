@@ -77,7 +77,7 @@ enet_packet_create_offset (const void * data, size_t dataLength, size_t dataOffs
 
     packet -> referenceCount = 0;
     packet -> flags = flags;
-    packet -> dataLength = dataLength;
+    packet -> dataLength = dataLength + dataOffset;
     packet -> freeCallback = NULL;
     packet -> userData = NULL;
 

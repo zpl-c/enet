@@ -443,7 +443,7 @@ extern void   enet_free (void *);
 
 #define ENET_VERSION_MAJOR 1
 #define ENET_VERSION_MINOR 4
-#define ENET_VERSION_PATCH 1
+#define ENET_VERSION_PATCH 3
 #define ENET_VERSION_CREATE(major, minor, patch) (((major)<<16) | ((minor)<<8) | (patch))
 #define ENET_VERSION_GET_MAJOR(version) (((version)>>16)&0xFF)
 #define ENET_VERSION_GET_MINOR(version) (((version)>>8)&0xFF)
@@ -2373,7 +2373,7 @@ extern size_t enet_protocol_command_size (enet_uint8);
         if (flags & ENET_PACKET_FLAG_NO_ALLOCATE)
           packet -> data = (enet_uint8 *) data;
         else
-        if (dataLength <= 0)
+        if ((dataLength + dataOffset) <= 0)
           packet -> data = NULL;
         else
         {
@@ -2390,7 +2390,7 @@ extern size_t enet_protocol_command_size (enet_uint8);
 
         packet -> referenceCount = 0;
         packet -> flags = flags;
-        packet -> dataLength = dataLength;
+        packet -> dataLength = dataLength + dataOffset;
         packet -> freeCallback = NULL;
         packet -> userData = NULL;
 
