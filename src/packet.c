@@ -60,7 +60,7 @@ enet_packet_create_offset (const void * data, size_t dataLength, size_t dataOffs
     if (flags & ENET_PACKET_FLAG_NO_ALLOCATE)
       packet -> data = (enet_uint8 *) data;
     else
-    if (dataLength <= 0)
+    if ((dataLength + dataOffset) <= 0)
       packet -> data = NULL;
     else
     {
