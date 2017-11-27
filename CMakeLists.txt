@@ -55,40 +55,42 @@ if(HAS_SOCKLEN_T)
     add_definitions(-DHAS_SOCKLEN_T=1)
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
+if (NOT DEFINED ENET_ONLY_CONFIG)
+    include_directories(${PROJECT_SOURCE_DIR}/include)
 
-set(INCLUDE_FILES_PREFIX include/enet)
-set(INCLUDE_FILES
-    ${INCLUDE_FILES_PREFIX}/callbacks.h
-    ${INCLUDE_FILES_PREFIX}/enet.h
-    ${INCLUDE_FILES_PREFIX}/list.h
-    ${INCLUDE_FILES_PREFIX}/protocol.h
-    ${INCLUDE_FILES_PREFIX}/time.h
-    ${INCLUDE_FILES_PREFIX}/types.h
-    ${INCLUDE_FILES_PREFIX}/unix.h
-    ${INCLUDE_FILES_PREFIX}/utility.h
-    ${INCLUDE_FILES_PREFIX}/win32.h
-)
+    set(INCLUDE_FILES_PREFIX include/enet)
+    set(INCLUDE_FILES
+        ${INCLUDE_FILES_PREFIX}/callbacks.h
+        ${INCLUDE_FILES_PREFIX}/enet.h
+        ${INCLUDE_FILES_PREFIX}/list.h
+        ${INCLUDE_FILES_PREFIX}/protocol.h
+        ${INCLUDE_FILES_PREFIX}/time.h
+        ${INCLUDE_FILES_PREFIX}/types.h
+        ${INCLUDE_FILES_PREFIX}/unix.h
+        ${INCLUDE_FILES_PREFIX}/utility.h
+        ${INCLUDE_FILES_PREFIX}/win32.h
+    )
 
-set(SOURCE_FILES
-    src/callbacks.c
-    src/compress.c
-    src/host.c
-    src/list.c
-    src/packet.c
-    src/peer.c
-    src/protocol.c
-    src/unix.c
-    src/win32.c)
+    set(SOURCE_FILES
+        src/callbacks.c
+        src/compress.c
+        src/host.c
+        src/list.c
+        src/packet.c
+        src/peer.c
+        src/protocol.c
+        src/unix.c
+        src/win32.c)
 
-source_group(include FILES ${INCLUDE_FILES})
-source_group(source FILES ${SOURCE_FILES})
+    source_group(include FILES ${INCLUDE_FILES})
+    source_group(source FILES ${SOURCE_FILES})
 
-add_library(enet STATIC
-    ${INCLUDE_FILES}
-    ${SOURCE_FILES}
-)
+    add_library(enet STATIC
+        ${INCLUDE_FILES}
+        ${SOURCE_FILES}
+    )
 
-if (MINGW)
-    target_link_libraries(enet winmm ws2_32)
+    if (MINGW)
+        target_link_libraries(enet winmm ws2_32)
+    endif()
 endif()
