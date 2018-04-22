@@ -26,3 +26,12 @@ if (DEFINED ENET_SHARED)
         target_link_libraries(enet winmm ws2_32)
     endif()
 endif()
+
+if (DEFINED ENET_TEST)
+    add_definitions(-DENET_IMPLEMENTATION)
+    add_executable(enet_test tes/build.c)
+
+    if (WIN32)
+        target_link_libraries(enet_test winmm ws2_32)
+    endif()
+endif()
