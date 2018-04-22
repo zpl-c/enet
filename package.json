@@ -21,10 +21,16 @@
     "c++"
   ],
   "author": "Lee Salzman",
-  "contributors": ["Vladyslav Hrytsenko", "Dominik Madarász"],
+  "contributors": [
+    "Vladyslav Hrytsenko",
+    "Dominik Madarász"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/zpl-c/enet-c/issues"
   },
-  "homepage": "https://github.com/zpl-c/enet-c#readme"
+  "homepage": "https://github.com/zpl-c/enet-c#readme",
+  "dependencies": {
+    "zpl.c": "^6.6.0"
+  }
 }
