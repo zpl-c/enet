@@ -5198,15 +5198,21 @@ extern "C" {
     }
 
     int enet_address_set_host(ENetAddress *address, const char *name) {
-        struct hostent * hostEntry = NULL;
-
+        struct hostent *hostEntry = NULL;
         hostEntry = gethostbyname(name);
 
         if (hostEntry == NULL || hostEntry->h_addrtype != AF_INET) {
-            if (!inet_pton(AF_INET6, name, &address->host))
-                { return -1; }
+            if (!inet_pton(AF_INET6, name, &address->host)) {
+                return -1;
+            }
+
             return 0;
         }
+
+        ((enet_uint32 *)&address->host.s6_addr)[0] = 0;
+        ((enet_uint32 *)&address->host.s6_addr)[1] = 0;
+        ((enet_uint32 *)&address->host.s6_addr)[2] = htonl(0xffff);
+        ((enet_uint32 *)&address->host.s6_addr)[3] = *(enet_uint32 *)hostEntry->h_addr_list[0];
 
         return 0;
     }
