@@ -2793,7 +2793,12 @@ extern "C" {
             }
 
             ++peer->packetsLost;
-            outgoingCommand->roundTripTimeout *= 2;
+
+            /* Replaced exponential backoff time with something more linear */
+            /* Source: http://lists.cubik.org/pipermail/enet-discuss/2014-May/002308.html */
+            outgoingCommand->roundTripTimeout = peer->roundTripTime + 4 * peer->roundTripTimeVariance;
+            outgoingCommand->roundTripTimeoutLimit = peer->timeoutLimit * outgoingCommand->roundTripTimeout;
+
             enet_list_insert(insertPosition, enet_list_remove(&outgoingCommand->outgoingCommandList));
 
             if (currentCommand == enet_list_begin(&peer->sentReliableCommands) && !enet_list_empty(&peer->sentReliableCommands)) {
