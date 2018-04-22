@@ -619,7 +619,9 @@ extern "C" {
         enet_uint32       incomingBandwidthThrottleEpoch;
         enet_uint32       outgoingBandwidthThrottleEpoch;
         enet_uint32       incomingDataTotal;
+        enet_uint64       totalDataReceived;
         enet_uint32       outgoingDataTotal;
+        enet_uint64       totalDataSent;
         enet_uint32       lastSendTime;
         enet_uint32       lastReceiveTime;
         enet_uint32       nextTimeout;
@@ -2406,6 +2408,7 @@ extern "C" {
             peer->address.host       = host->receivedAddress.host;
             peer->address.port       = host->receivedAddress.port;
             peer->incomingDataTotal += host->receivedDataLength;
+            peer->totalDataReceived += host->receivedDataLength;
         }
 
         currentData = host->receivedData + headerSize;
@@ -3055,6 +3058,7 @@ extern "C" {
                 }
 
                 host->totalSentData += sentLength;
+                currentPeer->totalDataSent += sentLength;
                 host->totalSentPackets++;
             }
 
@@ -3558,7 +3562,9 @@ extern "C" {
         peer->incomingBandwidthThrottleEpoch = 0;
         peer->outgoingBandwidthThrottleEpoch = 0;
         peer->incomingDataTotal             = 0;
+        peer->totalDataReceived             = 0;
         peer->outgoingDataTotal             = 0;
+        peer->totalDataSent                 = 0;
         peer->lastSendTime                  = 0;
         peer->lastReceiveTime               = 0;
         peer->nextTimeout                   = 0;
