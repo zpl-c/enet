@@ -1,5 +1,3 @@
-* use getaddrinfo and getnameinfo where available
-
 ENet 2.0.0 (April 22, 2018):
 * changed library format to single header
 * applied project-wide code style change

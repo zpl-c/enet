@@ -91,6 +91,7 @@
     #include <sys/ioctl.h>
     #include <sys/time.h>
     #include <sys/socket.h>
+    #include <sys/poll.h>
     #include <arpa/inet.h>
     #include <netinet/in.h>
     #include <netinet/tcp.h>
@@ -99,32 +100,7 @@
     #include <string.h>
     #include <errno.h>
     #include <time.h>
-
-    #ifdef __APPLE__
-    #ifdef HAS_POLL
-    #undef HAS_POLL
-    #endif
-    #ifndef HAS_FCNTL
-    #define HAS_FCNTL 1
-    #endif
-
-    #ifndef HAS_MSGHDR_FLAGS
-    #define HAS_MSGHDR_FLAGS 1
-    #endif
-
-    #endif // __APPLE__
-
-    #ifdef HAS_FCNTL
     #include <fcntl.h>
-    #endif
-
-    #ifdef HAS_POLL
-    #include <sys/poll.h>
-    #endif
-
-    #ifdef HAS_NO_SOCKLEN_T
-    typedef int socklen_t;
-    #endif
 
     #ifndef MSG_NOSIGNAL
     #define MSG_NOSIGNAL 0
@@ -4945,11 +4921,7 @@ extern "C" {
 
         switch (option) {
             case ENET_SOCKOPT_NONBLOCK:
-                #ifdef HAS_FCNTL
                 result = fcntl(socket, F_SETFL, (value ? O_NONBLOCK : 0) | (fcntl(socket, F_GETFL) & ~O_NONBLOCK));
-                #else
-                result = ioctl(socket, FIONBIO, &value);
-                #endif
                 break;
 
             case ENET_SOCKOPT_BROADCAST:
@@ -5123,11 +5095,9 @@ extern "C" {
             return -1;
         }
 
-        #ifdef HAS_MSGHDR_FLAGS
         if (msgHdr.msg_flags & MSG_TRUNC) {
             return -1;
         }
-        #endif
 
         if (address != NULL) {
             address->host           = sin.sin6_addr;
@@ -5148,7 +5118,6 @@ extern "C" {
     }
 
     int enet_socket_wait(ENetSocket socket, enet_uint32 *condition, enet_uint64 timeout) {
-        #ifdef HAS_POLL
         struct pollfd pollSocket;
         int pollCount;
 
@@ -5190,55 +5159,6 @@ extern "C" {
         }
 
         return 0;
-
-        #else  /* ifdef HAS_POLL */
-        fd_set readSet, writeSet;
-        struct timeval timeVal;
-        int selectCount;
-
-        timeVal.tv_sec  = timeout / 1000;
-        timeVal.tv_usec = (timeout % 1000) * 1000;
-
-        FD_ZERO(&readSet);
-        FD_ZERO(&writeSet);
-
-        if (*condition & ENET_SOCKET_WAIT_SEND) {
-            FD_SET(socket, &writeSet);
-        }
-
-        if (*condition & ENET_SOCKET_WAIT_RECEIVE) {
-            FD_SET(socket, &readSet);
-        }
-
-        selectCount = select(socket + 1, &readSet, &writeSet, NULL, &timeVal);
-
-        if (selectCount < 0) {
-            if (errno == EINTR && *condition & ENET_SOCKET_WAIT_INTERRUPT) {
-                *condition = ENET_SOCKET_WAIT_INTERRUPT;
-
-                return 0;
-            }
-
-            return -1;
-        }
-
-        *condition = ENET_SOCKET_WAIT_NONE;
-
-        if (selectCount == 0) {
-            return 0;
-        }
-
-        if (FD_ISSET(socket, &writeSet)) {
-            *condition |= ENET_SOCKET_WAIT_SEND;
-        }
-
-        if (FD_ISSET(socket, &readSet)) {
-            *condition |= ENET_SOCKET_WAIT_RECEIVE;
-        }
-
-        return 0;
-
-        #endif /* ifdef HAS_POLL */
     } /* enet_socket_wait */
 
     #endif // !_WIN32
