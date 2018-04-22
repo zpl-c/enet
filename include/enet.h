@@ -757,8 +757,7 @@ extern "C" {
 
         /** a peer has disconnected.  This event is generated on a successful
          * completion of a disconnect initiated by enet_peer_disconnect, if
-         * a peer has timed out, or if a connection request intialized by
-         * enet_host_connect has timed out.  The peer field contains the peer
+         * a peer has timed out.  The peer field contains the peer
          * which disconnected. The data field contains user supplied data
          * describing the disconnection, or 0, if none is available.
          */
@@ -770,7 +769,13 @@ extern "C" {
          * the packet that was received; this packet must be destroyed with
          * enet_packet_destroy after use.
          */
-        ENET_EVENT_TYPE_RECEIVE    = 3
+        ENET_EVENT_TYPE_RECEIVE    = 3,
+
+        /** a peer is disconnected because the host didn't receive the acknowledgment
+         * packet within certain maximum time out. The reason could be because of bad
+         * network connection or  host crashed.
+         */
+        ENET_EVENT_TYPE_DISCONNECT_TIMEOUT = 4,
     } ENetEventType;
 
     /**
@@ -1540,6 +1545,27 @@ extern "C" {
 
             enet_peer_reset(peer);
         } else {
+            peer->eventData = 0;
+            enet_protocol_dispatch_state(host, peer, ENET_PEER_STATE_ZOMBIE);
+        }
+    }
+
+    static void enet_protocol_notify_disconnect_timeout (ENetHost * host, ENetPeer * peer, ENetEvent * event) {
+        if (peer->state >= ENET_PEER_STATE_CONNECTION_PENDING) {
+           host->recalculateBandwidthLimits = 1;
+        }
+
+        if (peer->state != ENET_PEER_STATE_CONNECTING && peer->state < ENET_PEER_STATE_CONNECTION_SUCCEEDED) {
+            enet_peer_reset (peer);
+        }
+        else if (event != NULL) {
+            event->type = ENET_EVENT_TYPE_DISCONNECT_TIMEOUT;
+            event->peer = peer;
+            event->data = 0;
+
+            enet_peer_reset(peer);
+        }
+        else {
             peer->eventData = 0;
             enet_protocol_dispatch_state(host, peer, ENET_PEER_STATE_ZOMBIE);
         }
@@ -2789,7 +2815,7 @@ extern "C" {
                 (outgoingCommand->roundTripTimeout >= outgoingCommand->roundTripTimeoutLimit &&
                 ENET_TIME_DIFFERENCE(host->serviceTime, peer->earliestTimeout) >= peer->timeoutMinimum))
             ) {
-                enet_protocol_notify_disconnect(host, peer, event);
+                enet_protocol_notify_disconnect_timeout(host, peer, event);
                 return 1;
             }
 

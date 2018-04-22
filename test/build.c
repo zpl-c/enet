@@ -54,6 +54,11 @@ int main() {
                 event.peer->data = NULL;
                 break;
 
+            case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT:
+                printf ("%s timeout.\n", (char *)event.peer->data);
+                event.peer->data = NULL;
+                break;
+
             case ENET_EVENT_TYPE_NONE: break;
         }
     }
