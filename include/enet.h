@@ -8,7 +8,6 @@
  * #include <enet.h>
  *
  */
-
 #ifndef ENET_INCLUDE_H
 #define ENET_INCLUDE_H
 
@@ -45,8 +44,12 @@
         #pragma warning (disable: 4146) // unary minus operator applied to unsigned type
     #endif
 
+    #ifndef ENET_NO_PRAGMA_LINK
+    #pragma comment(lib, "ws2_32.lib")
+    #pragma comment(lib, "winmm.lib")
+    #endif
+
     #include <winsock2.h>
-    #include <mmsystem.h> // is it required ?
 
     typedef SOCKET ENetSocket;
 
@@ -4687,7 +4690,7 @@ extern "C" {
             return (int) sentLength;
         }
 
-        int enet_socket_receive(ENetSocket socket, const ENetAddress *address, const ENetBuffer *buffers, size_t bufferCount) {
+        int enet_socket_receive(ENetSocket socket, ENetAddress *address, ENetBuffer *buffers, size_t bufferCount) {
             INT sinLength = sizeof(struct sockaddr_in);
             DWORD flags   = 0, recvLength;
             struct sockaddr_in sin;
