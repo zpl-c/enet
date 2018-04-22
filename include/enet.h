@@ -52,6 +52,7 @@
     #pragma comment(lib, "winmm.lib")
     #endif
 
+    #include <winsock2.h>
     #include <ws2tcpip.h>
 
     typedef SOCKET ENetSocket;
@@ -72,11 +73,11 @@
     #define ENET_CALLBACK __cdecl
 
     #ifdef ENET_DLL
-    #ifdef ENET_BUILDING_LIB
+    #ifdef ENET_IMPLEMENTATION
     #define ENET_API __declspec( dllexport )
     #else
     #define ENET_API __declspec( dllimport )
-    #endif // ENET_BUILDING_LIB
+    #endif // ENET_IMPLEMENTATION
     #else
     #define ENET_API extern
     #endif // ENET_DLL
