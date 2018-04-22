@@ -30,7 +30,5 @@
     "url": "https://github.com/zpl-c/enet-c/issues"
   },
   "homepage": "https://github.com/zpl-c/enet-c#readme",
-  "dependencies": {
-    "zpl.c": "^6.6.0"
-  }
+  "dependencies": {}
 }
