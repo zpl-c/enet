@@ -44,9 +44,6 @@
         #pragma warning (disable: 4146) // unary minus operator applied to unsigned type
     #endif
 
-    #define HAS_INET_PTON 1
-    #define HAS_INET_NTOP 1
-
     #ifndef ENET_NO_PRAGMA_LINK
     #pragma comment(lib, "ws2_32.lib")
     #pragma comment(lib, "winmm.lib")
@@ -110,21 +107,11 @@
     #ifndef HAS_FCNTL
     #define HAS_FCNTL 1
     #endif
-    #ifndef HAS_INET_PTON
-    #define HAS_INET_PTON 1
-    #endif
-    #ifndef HAS_INET_NTOP
-    #define HAS_INET_NTOP 1
-    #endif
+
     #ifndef HAS_MSGHDR_FLAGS
     #define HAS_MSGHDR_FLAGS 1
     #endif
-    #ifndef HAS_GETADDRINFO
-    #define HAS_GETADDRINFO 1
-    #endif
-    #ifndef HAS_GETNAMEINFO
-    #define HAS_GETNAMEINFO 1
-    #endif
+
     #endif // __APPLE__
 
     #ifdef HAS_FCNTL
@@ -496,7 +483,7 @@ extern "C" {
         ENET_PACKET_FLAG_SENT                = (1 << 8), /** whether the packet has been sent from all queues it has been entered into */
     } ENetPacketFlag;
 
-    typedef void (ENET_CALLBACK *ENetPacketFreeCallback)(struct _ENetPacket *);
+    typedef void (ENET_CALLBACK *ENetPacketFreeCallback)(void *);
 
     /**
      * ENet packet structure.
@@ -695,7 +682,7 @@ extern "C" {
     typedef enet_uint32 (ENET_CALLBACK * ENetChecksumCallback)(const ENetBuffer *buffers, size_t bufferCount);
 
     /** Callback for intercepting received raw UDP packets. Should return 1 to intercept, 0 to ignore, or -1 to propagate an error. */
-    typedef int (ENET_CALLBACK * ENetInterceptCallback)(struct _ENetHost *host, struct _ENetEvent *event);
+    typedef int (ENET_CALLBACK * ENetInterceptCallback)(struct _ENetHost *host, void *event);
 
     /** An ENet host for communicating with peers.
      *
@@ -4493,14 +4480,7 @@ extern "C" {
         hostEntry = gethostbyname(name);
 
         if (hostEntry == NULL || hostEntry->h_addrtype != AF_INET) {
-    #ifdef HAS_INET_PTON
             if (!inet_pton(AF_INET6, name, &address->host))
-    #elif _MSC_VER
-        #error "IPv6 Requires inet_pton"
-        // TODO FIXME
-    #else
-            if (!inet_aton(name, (struct in_addr *)&address->host))
-    #endif
                 { return -1; }
             return 0;
         }
@@ -4509,22 +4489,9 @@ extern "C" {
     }
 
     int enet_address_get_host_ip(const ENetAddress *address, char *name, size_t nameLength) {
-    #ifdef HAS_INET_NTOP
-        if (inet_ntop(AF_INET6, &address->host, name, nameLength) == NULL)
-    #else
-        char *addr = inet_ntoa(*(struct in_addr *) &address->host);
-
-        if (addr == NULL) {
+        if (inet_ntop(AF_INET6, &address->host, name, nameLength) == NULL) {
             return -1;
-        } else {
-            size_t addrLen = strlen(addr);
-            if (addrLen >= nameLength) {
-                return -1;
-            }
-            memcpy(name, addr, addrLen + 1);
         }
-    #endif
-            return -1;
 
         return 0;
     }
@@ -4854,19 +4821,14 @@ extern "C" {
     }
 
     int enet_address_set_host_ip(ENetAddress *address, const char *name) {
-    #ifdef HAS_INET_PTON
-        if (!inet_pton(AF_INET6, name, &address->host))
-    #else
-    #error "inet_pton() is needed for IPv6 support"
-        if (!inet_aton(name, (struct in_addr *) &address->host))
-    #endif
-        { return -1; }
+        if (!inet_pton(AF_INET6, name, &address->host)) {
+            return -1;
+        }
 
         return 0;
     }
 
     int enet_address_set_host(ENetAddress *address, const char *name) {
-    #ifdef HAS_GETADDRINFO
         struct addrinfo hints, *resultList = NULL, *result = NULL;
 
         memset(&hints, 0, sizeof(hints));
@@ -4907,54 +4869,19 @@ extern "C" {
         if (resultList != NULL) {
             freeaddrinfo(resultList);
         }
-    #else  /* ifdef HAS_GETADDRINFO */
-        #warning "Really use gethostbyname() with IPv6? Not all platforms support it."
-        struct hostent *hostEntry = NULL;
-
-        #ifdef HAS_GETHOSTBYNAME_R
-            struct hostent hostData;
-            char buffer [2048];
-            int errnum;
-
-        #if defined(linux) || defined(__linux) || defined(__linux__) || defined(__FreeBSD__) || \
-            defined(__FreeBSD_kernel__) || defined(__DragonFly__) || defined(__EMSCRIPTEN__)
-            gethostbyname_r(name, &hostData, buffer, sizeof(buffer), &hostEntry, &errnum);
-        #else
-            hostEntry = gethostbyname_r(name, &hostData, buffer, sizeof(buffer), &errnum);
-        #endif
-        #else
-            hostEntry = gethostbyname(name);
-        #endif /* ifdef HAS_GETHOSTBYNAME_R */
-
-            if (hostEntry != NULL && hostEntry->h_addrtype == AF_INET6) {
-                address->host = *(struct in6_addr *)hostEntry->h_addr_list [0];
-                return 0;
-            }
-    #endif /* ifdef HAS_GETADDRINFO */
 
         return enet_address_set_host_ip(address, name);
     } /* enet_address_set_host */
 
     int enet_address_get_host_ip(const ENetAddress *address, char *name, size_t nameLength) {
-    #ifdef HAS_INET_NTOP
-        if (inet_ntop(AF_INET6, &address->host, name, nameLength) == NULL)
-    #else
-        #error "inet_ntop() is needed for IPv6 support"
-        char *addr = inet_ntoa(*(struct in_addr *) &address->host);
-        if (addr != NULL) {
-            size_t addrLen = strlen(addr);
-            if (addrLen >= nameLength) {
-                return -1;
-            }
-            memcpy(name, addr, addrLen + 1);
-        } else
-    #endif
-        { return -1; }
+        if (inet_ntop(AF_INET6, &address->host, name, nameLength) == NULL) {
+            return -1;
+        }
+
         return 0;
     }
 
     int enet_address_get_host(const ENetAddress *address, char *name, size_t nameLength) {
-    #ifdef HAS_GETNAMEINFO
         struct sockaddr_in6 sin;
         int err;
 
@@ -4975,35 +4902,6 @@ extern "C" {
         if (err != EAI_NONAME) {
             return -1;
         }
-    #else  /* ifdef HAS_GETNAMEINFO */
-        #warning "Really use gethostbyaddr() with IPv6? Not all platforms support it."
-        struct in6_addr in;
-        struct hostent *hostEntry = NULL;
-        #ifdef HAS_GETHOSTBYADDR_R
-            struct hostent hostData;
-            char buffer [2048];
-            int errnum;
-
-            in = address->host;
-
-            #if defined(linux) || defined(__linux) || defined(__linux__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__DragonFly__) || defined(__EMSCRIPTEN__)
-                gethostbyaddr_r((char *)&in, sizeof(struct in6_addr), AF_INET6, &hostData, buffer, sizeof(buffer), &hostEntry, &errnum);
-            #else
-                hostEntry = gethostbyaddr_r((char *)&in, sizeof(struct in6_addr), AF_INET6, &hostData, buffer, sizeof(buffer), &errnum);
-            #endif
-        #else  /* ifdef HAS_GETHOSTBYADDR_R */
-            in = address->host;
-
-            hostEntry = gethostbyaddr((char *)&in, sizeof(struct in6_addr), AF_INET6);
-        #endif /* ifdef HAS_GETHOSTBYADDR_R */
-
-        if (hostEntry != NULL) {
-            size_t hostLen = strlen(hostEntry->h_name);
-            if (hostLen >= nameLength) { return -1; }
-            memcpy(name, hostEntry->h_name, hostLen + 1);
-            return 0;
-        }
-    #endif /* ifdef HAS_GETNAMEINFO */
 
         return enet_address_get_host_ip(address, name, nameLength);
     } /* enet_address_get_host */

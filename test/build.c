@@ -33,12 +33,12 @@ int main() {
     while (enet_host_service(server, &event, 1000) > 0) {
         switch (event.type) {
             case ENET_EVENT_TYPE_CONNECT:
-                printf("A new client connected from %x:%u.\n",  event.peer->address.host, event.peer->address.port);
+                printf("A new client connected from ::1:%u.\n", event.peer->address.port);
                 /* Store any relevant client information here. */
                 event.peer->data = "Client information";
                 break;
             case ENET_EVENT_TYPE_RECEIVE:
-                printf("A packet of length %lu containing %s was received from %s on channel %u.\n",
+                printf("A packet of length %zu containing %s was received from %s on channel %u.\n",
                         event.packet->dataLength,
                         event.packet->data,
                         (char *)event.peer->data,
