@@ -195,10 +195,10 @@ extern "C" {
 // !
 // =======================================================================//
 
-    typedef unsigned char enet_uint8;       /**< unsigned 8-bit type  */
-    typedef unsigned short enet_uint16;     /**< unsigned 16-bit type */
-    typedef unsigned int enet_uint32;      /**< unsigned 32-bit type */
-    typedef uint64_t enet_uint64;
+    typedef uint8_t   enet_uint8;   /**< unsigned 8-bit type  */
+    typedef uint16_t enet_uint16;   /**< unsigned 16-bit type */
+    typedef uint32_t enet_uint32;   /**< unsigned 32-bit type */
+    typedef uint64_t enet_uint64;   /**< unsigned 64-bit type */
 
     typedef enet_uint32 ENetVersion;
 
@@ -4881,10 +4881,10 @@ extern "C" {
                 if (result->ai_family == AF_INET) {
                     struct sockaddr_in * sin = (struct sockaddr_in *) result->ai_addr;
 
-                    ((uint32_t *) & address->host.s6_addr)[0] = 0;
-                    ((uint32_t *) & address->host.s6_addr)[1] = 0;
-                    ((uint32_t *) & address->host.s6_addr)[2] = htonl(0xffff);
-                    ((uint32_t *) & address->host.s6_addr)[3] = sin->sin_addr.s_addr;
+                    ((uint32_t *)&address->host.s6_addr)[0] = 0;
+                    ((uint32_t *)&address->host.s6_addr)[1] = 0;
+                    ((uint32_t *)&address->host.s6_addr)[2] = htonl(0xffff);
+                    ((uint32_t *)&address->host.s6_addr)[3] = sin->sin_addr.s_addr;
 
                     freeaddrinfo(resultList);
 
