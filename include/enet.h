@@ -628,7 +628,9 @@ extern "C" {
         enet_uint32       earliestTimeout;
         enet_uint32       packetLossEpoch;
         enet_uint32       packetsSent;
+        enet_uint64       totalPacketsSent; /**< total number of packets sent during a session */
         enet_uint32       packetsLost;
+        enet_uint32       totalPacketsLost;     /**< total number of packets lost during a session */
         enet_uint32       packetLoss; /**< mean packet loss of reliable packets as a ratio with respect to the constant ENET_PEER_PACKET_LOSS_SCALE */
         enet_uint32       packetLossVariance;
         enet_uint32       packetThrottle;
@@ -2796,6 +2798,7 @@ extern "C" {
             }
 
             ++peer->packetsLost;
+            ++peer->totalPacketsLost;
 
             /* Replaced exponential backoff time with something more linear */
             /* Source: http://lists.cubik.org/pipermail/enet-discuss/2014-May/002308.html */
@@ -2915,6 +2918,8 @@ extern "C" {
             }
 
             ++peer->packetsSent;
+            ++peer->totalPacketsSent;
+
             ++command;
             ++buffer;
         }
@@ -3571,7 +3576,9 @@ extern "C" {
         peer->earliestTimeout               = 0;
         peer->packetLossEpoch               = 0;
         peer->packetsSent                   = 0;
+        peer->totalPacketsSent              = 0;
         peer->packetsLost                   = 0;
+        peer->totalPacketsLost              = 0;
         peer->packetLoss                    = 0;
         peer->packetLossVariance            = 0;
         peer->packetThrottle                = ENET_PEER_DEFAULT_PACKET_THROTTLE;
