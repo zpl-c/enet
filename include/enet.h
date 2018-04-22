@@ -12,16 +12,8 @@
 #ifndef ENET_INCLUDE_H
 #define ENET_INCLUDE_H
 
-// #include <sys/types.h>
-// #include <sys/socket.h>
-// #include <sys/ioctl.h>
-// #include <sys/time.h>
-// #include <unistd.h>
-// #include <string.h>
-// #include <errno.h>
-// #include <time.h>
-
-#include "zpl.h"
+#include <stdlib.h>
+#include <stdint.h>
 
 #define ENET_VERSION_MAJOR 2
 #define ENET_VERSION_MINOR 0
@@ -45,7 +37,7 @@
 // !
 // =======================================================================//
 
-#if defined(ZPL_SYSTEM_WINDOWS)
+#if defined(_WIN32)
     #if defined(_MSC_VER) && defined(ENET_IMPLEMENTATION)
         #pragma warning (disable: 4267) // size_t to int conversion
         #pragma warning (disable: 4244) // 64bit to 32bit int
@@ -90,11 +82,18 @@
     #define ENET_SOCKETSET_REMOVE(sockset, socket) FD_CLR(socket, &(sockset))
     #define ENET_SOCKETSET_CHECK(sockset, socket)  FD_ISSET(socket, &(sockset))
 #else
+    #include <sys/types.h>
+    #include <sys/ioctl.h>
+    #include <sys/time.h>
     #include <sys/socket.h>
     #include <arpa/inet.h>
     #include <netinet/in.h>
     #include <netinet/tcp.h>
     #include <netdb.h>
+    #include <unistd.h>
+    #include <string.h>
+    #include <errno.h>
+    #include <time.h>
 
     #ifdef __APPLE__
     #ifdef HAS_POLL
@@ -187,10 +186,10 @@ extern "C" {
 // !
 // =======================================================================//
 
-    typedef u8  enet_uint8;     /**< unsigned 8-bit type  */
-    typedef u16 enet_uint16;    /**< unsigned 16-bit type */
-    typedef u32 enet_uint32;    /**< unsigned 32-bit type */
-    typedef u64 enet_uint64;    /**< unsigned 64-bit type */
+    typedef unsigned char enet_uint8;       /**< unsigned 8-bit type  */
+    typedef unsigned short enet_uint16;     /**< unsigned 16-bit type */
+    typedef unsigned int enet_uint32;      /**< unsigned 32-bit type */
+    typedef uint64_t enet_uint64;
 
     typedef enet_uint32 ENetVersion;
 
@@ -1128,7 +1127,7 @@ extern "C" {
         }
 
         if (packet->freeCallback != NULL) {
-            (*packet->freeCallback)(packet);
+            (*packet->freeCallback)((void *)packet);
         }
 
         if (!(packet->flags & ENET_PACKET_FLAG_NO_ALLOCATE) && packet->data != NULL) {
@@ -2201,7 +2200,7 @@ extern "C" {
 
         if (host->checksum != NULL) {
             enet_uint32 *checksum = (enet_uint32 *) &host->receivedData [headerSize - sizeof(enet_uint32)];
-            enet_uint32 *desiredChecksum = *checksum;
+            enet_uint32 desiredChecksum = *checksum;
             ENetBuffer buffer;
 
             *checksum = peer != NULL ? peer->connectID : 0;
@@ -2394,7 +2393,7 @@ extern "C" {
             host->totalReceivedPackets++;
 
             if (host->intercept != NULL) {
-                switch (host->intercept(host, event)) {
+                switch (host->intercept(host, (void *)event)) {
                     case 1:
                         if (event != NULL && event->type != ENET_EVENT_TYPE_NONE) {
                             return 1;

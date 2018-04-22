@@ -1,5 +1,6 @@
 #define ENET_IMPLEMENTATION
-#include <enet.h>
+#include "enet.h"
+#include <stdio.h>
 
 int main() {
     if (enet_initialize () != 0) {
@@ -38,7 +39,7 @@ int main() {
                 printf("A packet of length %lu containing %s was received from %s on channel %u.\n",
                         event.packet->dataLength,
                         event.packet->data,
-                        event.peer->data,
+                        (char *)event.peer->data,
                         event.channelID);
 
                 /* Clean up the packet now that we're done using it. */
@@ -46,7 +47,7 @@ int main() {
                 break;
 
             case ENET_EVENT_TYPE_DISCONNECT:
-                printf ("%s disconnected.\n", event.peer->data);
+                printf ("%s disconnected.\n", (char *)event.peer->data);
                 /* Reset the peer's client information. */
                 event.peer->data = NULL;
                 break;
