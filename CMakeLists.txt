@@ -7,17 +7,16 @@ else()
 	add_definitions(-Wno-error)
 endif()
 
-if (NOT DEFINED ENET_ONLY_CONFIG)
-    include_directories(${PROJECT_SOURCE_DIR}/include)
-    set(INCLUDE_FILES include/enet.h)
-    source_group(include FILES ${INCLUDE_FILES})
+include_directories(${PROJECT_SOURCE_DIR}/include)
 
-    add_library(enet STATIC
-        ${INCLUDE_FILES}
-        ${SOURCE_FILES}
-    )
+if (DEFINED ENET_STATIC)
+    add_definitions(-DENET_IMPLEMENTATION)
+    add_library(enet_static STATIC include/enet.h)
+    target_link_libraries(enet_static winmm ws2_32)
+endif()
 
-    if (MINGW)
-        target_link_libraries(enet winmm ws2_32)
-    endif()
+if (DEFINED ENET_SHARED)
+    add_definitions(-DENET_IMPLEMENTATION -DENET_DLL)
+    add_library(enet STATIC include/enet.h)
+    target_link_libraries(enet winmm ws2_32)
 endif()

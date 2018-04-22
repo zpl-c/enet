@@ -2,6 +2,18 @@ ENet 2.0.0 (April 22, 2018):
 * changed library format to single header
 * applied project-wide code style change
 * integrated ipv6 changes from @proller
+* changed packet creation to have one less malloc and free per packet. @boardwalk
+* removed enet_packet_resize
+* added timeout disconnect notification event @airtame
+* added total packets sent and lost to enet_peer @airtame
+* force a connect packet not to have extra bytes @pisto
+* enforce mtu while receiving packets, and don't give up receiving if one too big comes through @pisto
+* add metrics for total data send and received @airtame
+* replaced exp backoff time for rel packet timeout with linear @airtame
+* added monotonic time @airtame
+* removed enet_time_set
+* removed a lot of wide platform support code, might bring a lot of issues on older/non-standart platforms
+* removed range coder compression code
 
 ENet 1.3.13 (April 30, 2015):
 
