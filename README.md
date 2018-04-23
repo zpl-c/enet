@@ -76,7 +76,7 @@ Build the shared library:
 $ mkdir build
 $ cd build
 $ cmake .. -DENET_SHARED=1 -DCMAKE_BUILD_TYPE=Release
-$ make
+$ cmake --build .
 ```
 
 Use it:
@@ -105,7 +105,7 @@ Build the static library:
 $ mkdir build
 $ cd build
 $ cmake .. -DENET_STATIC=1 -DCMAKE_BUILD_TYPE=Release
-$ make
+$ cmake --build .
 ```
 
 Use it:
