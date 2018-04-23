@@ -72,7 +72,7 @@ int main() {
 
     printf("starting clients...\n");
     for (i = 0; i < MAX_CLIENTS; ++i) {
-        enet_address_set_host(&address, "::1");
+        enet_address_set_host(&address, "127.0.0.1");
         clients[i].host = enet_host_create(NULL, 1, 2, 0, 0);
         clients[i].peer = enet_host_connect(clients[i].host, &address, 2, 0);
     }

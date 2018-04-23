@@ -5181,8 +5181,7 @@ extern "C" {
         #define NS_IN6ADDRSZ 16
         #define NS_INT16SZ   2
 
-        int inet_pton4(const char *src, char *dst)
-        {
+        int inet_pton4(const char *src, char *dst) {
             uint8_t tmp[NS_INADDRSZ], *tp;
 
             int saw_digit = 0;
@@ -5228,8 +5227,7 @@ extern "C" {
             return 1;
         }
 
-        int inet_pton6(const char *src, char *dst)
-        {
+        int inet_pton6(const char *src, char *dst) {
             static const char xdigits[] = "0123456789abcdef";
             uint8_t tmp[NS_IN6ADDRSZ];
 
@@ -5325,14 +5323,13 @@ extern "C" {
         }
 
 
-        int inet_pton(int af, const char *src, char *dst)
-        {
+        int inet_pton(int af, const char *src, struct in6_addr *dst) {
             switch (af)
             {
             case AF_INET:
-                return inet_pton4(src, dst);
+                return inet_pton4(src, (char *)dst);
             case AF_INET6:
-                return inet_pton6(src, dst);
+                return inet_pton6(src, (char *)dst);
             default:
                 return -1;
             }
