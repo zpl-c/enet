@@ -18,7 +18,7 @@
 
 #define ENET_VERSION_MAJOR 2
 #define ENET_VERSION_MINOR 0
-#define ENET_VERSION_PATCH 0
+#define ENET_VERSION_PATCH 1
 #define ENET_VERSION_CREATE(major, minor, patch) (((major)<<16) | ((minor)<<8) | (patch))
 #define ENET_VERSION_GET_MAJOR(version) (((version)>>16)&0xFF)
 #define ENET_VERSION_GET_MINOR(version) (((version)>>8)&0xFF)
@@ -1083,6 +1083,10 @@ extern "C" {
     #ifdef AT_HAVE_ATOMICS
         #define ENET_ATOMIC_READ(ptr) __atomic_load_n((ptr), __ATOMIC_ACQUIRE)
         #define ENET_ATOMIC_WRITE(ptr, value) __atomic_store_n((ptr), (value), __ATOMIC_RELEASE)
+
+        #ifndef typeof
+        #define typeof __typeof__
+        #endif
 
         /* clang_analyzer doesn't know that CAS writes to memory so it complains about
            potentially lost data. Replace the code with the equivalent non-sync code. */
