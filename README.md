@@ -22,7 +22,8 @@
     Brought to you by
     <a href="https://github.com/lsalzman">@lsalzman</a>,
     <a href="https://github.com/inlife">@inlife</a>,
-    <a href="https://github.com/zaklaus">@zaklaus</a>
+    <a href="https://github.com/zaklaus">@zaklaus</a>,
+    <a href="https://github.com/inlife">@nxrighthere</a>
     and other contributors!
   </sub>
 </div>
@@ -34,11 +35,14 @@
 This is a fork of the original library [lsalzman/enet](https://github.com/lsalzman/enet). While original repo offers a stable, time-tested wonderful library,
 we are trying to change some things, things, which can't be reflected on the main repo, like:
 
+* integrated ipv6 support
+* added monotonic time
+* applied project-wide code style change
+* cleaned up project
+* single-header style code
 * NPM package distribution
-* Single-Header style code
-* Removed some config/make files
-* Project/Code cleanup
-* And other various changes
+* removed a lot of older methods
+* and many other various changes
 
 ## Description
 
@@ -64,7 +68,66 @@ Add include path to the library `node_modules/enet.c/include` to your makefile/
 
 Dowload file [include/enet.h](https://raw.githubusercontent.com/zpl-c/enet/master/include/enet.h) and just add to your project.
 
-## Usage
+## Usage (Shared library)
+
+Build the shared library:
+
+```sh
+$ mkdir build
+$ cd build
+$ cmake .. -DENET_SHARED=1 -DCMAKE_BUILD_TYPE=Release
+$ make
+```
+
+Use it:
+
+```c
+#define ENET_DLL
+#include <enet.h>
+#include <stdio.h>
+
+int main() {
+    if (enet_initialize () != 0) {
+        printf("An error occurred while initializing ENet.\n");
+        return 1;
+    }
+
+    enet_deinitialize();
+    return 0;
+}
+```
+
+## Usage (Static library)
+
+Build the static library:
+
+```sh
+$ mkdir build
+$ cd build
+$ cmake .. -DENET_STATIC=1 -DCMAKE_BUILD_TYPE=Release
+$ make
+```
+
+Use it:
+
+```c
+#include <enet.h>
+#include <stdio.h>
+
+int main() {
+    if (enet_initialize () != 0) {
+        printf("An error occurred while initializing ENet.\n");
+        return 1;
+    }
+
+    enet_deinitialize();
+    return 0;
+}
+```
+
+## Usage (Direct)
+
+In this case library will be built-in inside the project itself.
 
 Make sure you add a define for `ENET_IMPLEMENTATION` before including the `enet.h`.
 
@@ -73,6 +136,7 @@ Here is a simple server demo, it will wait 1 second for events, and then exit if
 ```c
 #define ENET_IMPLEMENTATION
 #include <enet.h>
+#include <stdio.h>
 
 int main() {
     if (enet_initialize () != 0) {
