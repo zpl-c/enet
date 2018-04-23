@@ -75,6 +75,10 @@ int main() {
         enet_address_set_host(&address, "127.0.0.1");
         clients[i].host = enet_host_create(NULL, 1, 2, 0, 0);
         clients[i].peer = enet_host_connect(clients[i].host, &address, 2, 0);
+        if (clients[i].peer == NULL) {
+            printf("coundlnt connect\n");
+            return 1;
+        }
     }
 
     // program will make N iterations, and then exit
