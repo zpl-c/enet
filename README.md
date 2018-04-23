@@ -23,7 +23,7 @@
     <a href="https://github.com/lsalzman">@lsalzman</a>,
     <a href="https://github.com/inlife">@inlife</a>,
     <a href="https://github.com/zaklaus">@zaklaus</a>,
-    <a href="https://github.com/inlife">@nxrighthere</a>
+    <a href="https://github.com/nxrighthere">@nxrighthere</a>
     and other contributors!
   </sub>
 </div>
@@ -125,7 +125,7 @@ int main() {
 }
 ```
 
-## Usage (Direct)
+## Usage (Direct, Preferred)
 
 In this case library will be built-in inside the project itself.
 
