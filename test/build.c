@@ -53,6 +53,7 @@ int main() {
 
     #define MAX_CLIENTS 32
 
+    int i = 0;
     ENetHost *server;
     Client clients[MAX_CLIENTS];
     ENetAddress address = {0};
@@ -70,7 +71,7 @@ int main() {
     }
 
     printf("starting clients...\n");
-    for (int i = 0; i < MAX_CLIENTS; ++i) {
+    for (i = 0; i < MAX_CLIENTS; ++i) {
         enet_address_set_host(&address, "::1");
         clients[i].host = enet_host_create(NULL, 1, 2, 0, 0);
         clients[i].peer = enet_host_connect(clients[i].host, &address, 2, 0);
@@ -83,14 +84,14 @@ int main() {
         host_server(server);
 
         ENetEvent event;
-        for (int i = 0; i < MAX_CLIENTS; ++i) {
+        for (i = 0; i < MAX_CLIENTS; ++i) {
             enet_host_service(clients[i].host, &event, 0);
         }
 
         counter--;
     } while (counter > 0);
 
-    for (int i = 0; i < MAX_CLIENTS; ++i) {
+    for (i = 0; i < MAX_CLIENTS; ++i) {
         enet_peer_disconnect_now(clients[i].peer, 0);
         enet_host_destroy(clients[i].host);
     }
