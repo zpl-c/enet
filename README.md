@@ -6,6 +6,7 @@
 
 <div align="center">
     <a href="https://travis-ci.org/zpl-c/enet"><img src="https://travis-ci.org/zpl-c/enet.svg" alt="Build status" /></a>
+    <a href="https://ci.appveyor.com/project/inlife/enet"><img src="https://ci.appveyor.com/api/projects/status/0mkwad2yljdlq3c6?svg=true" alt="Build status" /></a>
     <a href="https://www.npmjs.com/package/enet.c"><img src="https://img.shields.io/npm/v/enet.c.svg?maxAge=3600" alt="NPM version" /></a>
     <a href="https://discord.gg/2fZVEym"><img src="https://discordapp.com/api/guilds/354670964400848898/embed.png" alt="Discord server" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/github/license/zpl-c/enet.svg" alt="license" /></a>
