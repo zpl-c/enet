@@ -5,7 +5,6 @@ platform:
 
 configuration:
   - Release
-  - Debug
 
 before_build:
   - cmake . -G "Visual Studio 15 2017 Win64" -DENET_SHARED=1 -DENET_TEST=1
@@ -17,7 +16,7 @@ test_script:
   - '%APPVEYOR_BUILD_FOLDER%\%CONFIGURATION%\enet_test.exe'
 
 artifacts:
-  - path: '%APPVEYOR_BUILD_FOLDER%\Release\*.dll'
+  - path: 'Release\*.dll'
     name: Releases
 
 deploy:
