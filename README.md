@@ -57,7 +57,7 @@ specific so that the library remains flexible, portable, and easily embeddable.
 
 ## Installation (via npm)
 
-Install library using (omit `--save` if you dont have npm project initilized)
+Install library using (omit `--save` if you don't have npm project initilized)
 
 ```sh
 $ npm install enet.c --save
@@ -128,9 +128,9 @@ int main() {
 
 ## Usage (Direct, Preferred)
 
-In this case library will be built-in inside the project itself.
+In this case, library will be embedded to the project itself.
 
-Make sure you add a define for `ENET_IMPLEMENTATION` before including the `enet.h`.
+Make sure you add a define for `ENET_IMPLEMENTATION` exactly in one source file before including the `enet.h`.
 
 Here is a simple server demo, it will wait 1 second for events, and then exit if none were found:
 
