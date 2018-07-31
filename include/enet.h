@@ -1524,6 +1524,10 @@ extern "C" {
         if (event != NULL) {
             enet_protocol_change_state(host, peer, ENET_PEER_STATE_CONNECTED);
 
+            peer->totalDataSent = 0;
+            peer->totalDataReceived = 0;
+            peer->totalPacketsSent = 0;
+            peer->totalPacketsLost = 0;
             event->type = ENET_EVENT_TYPE_CONNECT;
             event->peer = peer;
             event->data = peer->eventData;
