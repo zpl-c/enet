@@ -48,8 +48,8 @@ we are trying to change some things, things, which can't be reflected on the mai
 ## Description
 
 ENet's purpose is to provide a relatively thin, simple and robust network communication
-layer on top of UDP (User Datagram Protocol).The primary feature it provides is optional
-reliable, in-order delivery of packets.
+layer on top of UDP (User Datagram Protocol). The primary feature it provides is optional
+reliable, in-order delivery of packets, and fragmentation.
 
 ENet omits certain higher level networking features such as authentication, lobbying,
 server discovery, encryption, or other similar tasks that are particularly application
@@ -172,24 +172,31 @@ int main() {
                 /* Store any relevant client information here. */
                 event.peer->data = "Client information";
                 break;
+
             case ENET_EVENT_TYPE_RECEIVE:
                 printf("A packet of length %lu containing %s was received from %s on channel %u.\n",
                         event.packet->dataLength,
                         event.packet->data,
                         event.peer->data,
                         event.channelID);
-
                 /* Clean up the packet now that we're done using it. */
                 enet_packet_destroy (event.packet);
                 break;
 
             case ENET_EVENT_TYPE_DISCONNECT:
-                printf ("%s disconnected.\n", event.peer->data);
+                printf("%s disconnected.\n", event.peer->data);
                 /* Reset the peer's client information. */
                 event.peer->data = NULL;
                 break;
 
-            case ENET_EVENT_TYPE_NONE: break;
+            case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT:
+                printf("%s disconnected due to timeout.\n", event.peer->data);
+                /* Reset the peer's client information. */
+                event.peer->data = NULL;
+                break;
+
+            case ENET_EVENT_TYPE_NONE:
+                break;
         }
     }
 
