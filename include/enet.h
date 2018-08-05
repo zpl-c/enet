@@ -42,7 +42,7 @@
 
 #define ENET_VERSION_MAJOR 2
 #define ENET_VERSION_MINOR 0
-#define ENET_VERSION_PATCH 1
+#define ENET_VERSION_PATCH 2
 #define ENET_VERSION_CREATE(major, minor, patch) (((major)<<16) | ((minor)<<8) | (patch))
 #define ENET_VERSION_GET_MAJOR(version) (((version)>>16)&0xFF)
 #define ENET_VERSION_GET_MINOR(version) (((version)>>8)&0xFF)
@@ -308,9 +308,8 @@ extern "C" {
         ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE = (1 << 7),
         ENET_PROTOCOL_COMMAND_FLAG_UNSEQUENCED = (1 << 6),
 
-        ENET_PROTOCOL_HEADER_FLAG_COMPRESSED   = (1 << 14),
-        ENET_PROTOCOL_HEADER_FLAG_SENT_TIME    = (1 << 15),
-        ENET_PROTOCOL_HEADER_FLAG_MASK         = ENET_PROTOCOL_HEADER_FLAG_COMPRESSED | ENET_PROTOCOL_HEADER_FLAG_SENT_TIME,
+        ENET_PROTOCOL_HEADER_FLAG_SENT_TIME    = (1 << 14),
+        ENET_PROTOCOL_HEADER_FLAG_MASK         = ENET_PROTOCOL_HEADER_FLAG_SENT_TIME,
 
         ENET_PROTOCOL_HEADER_SESSION_MASK      = (3 << 12),
         ENET_PROTOCOL_HEADER_SESSION_SHIFT     = 12
@@ -699,21 +698,6 @@ extern "C" {
         size_t            totalWaitingData;
     } ENetPeer;
 
-    /** An ENet packet compressor for compressing UDP packets before socket sends or receives. */
-    typedef struct _ENetCompressor {
-        /** Context data for the compressor. Must be non-NULL. */
-        void *context;
-
-        /** Compresses from inBuffers[0:inBufferCount-1], containing inLimit bytes, to outData, outputting at most outLimit bytes. Should return 0 on failure. */
-        size_t(ENET_CALLBACK * compress) (void *context, const ENetBuffer * inBuffers, size_t inBufferCount, size_t inLimit, enet_uint8 * outData, size_t outLimit);
-
-        /** Decompresses from inData, containing inLimit bytes, to outData, outputting at most outLimit bytes. Should return 0 on failure. */
-        size_t(ENET_CALLBACK * decompress) (void *context, const enet_uint8 * inData, size_t inLimit, enet_uint8 * outData, size_t outLimit);
-
-        /** Destroys the context when compression is disabled or the host is destroyed. May be NULL. */
-        void (ENET_CALLBACK * destroy)(void *context);
-    } ENetCompressor;
-
     /** Callback that computes the checksum of the data held in buffers[0:bufferCount-1] */
     typedef enet_uint32 (ENET_CALLBACK * ENetChecksumCallback)(const ENetBuffer *buffers, size_t bufferCount);
 
@@ -730,7 +714,6 @@ extern "C" {
      *  @sa enet_host_service()
      *  @sa enet_host_flush()
      *  @sa enet_host_broadcast()
-     *  @sa enet_host_compress()
      *  @sa enet_host_channel_limit()
      *  @sa enet_host_bandwidth_limit()
      *  @sa enet_host_bandwidth_throttle()
@@ -752,20 +735,19 @@ extern "C" {
         int                   continueSending;
         size_t                packetSize;
         enet_uint16           headerFlags;
+        enet_uint32           totalSentData;        /**< total data sent, user should reset to 0 as needed to prevent overflow */
+        enet_uint32           totalSentPackets;     /**< total UDP packets sent, user should reset to 0 as needed to prevent overflow */
+        enet_uint32           totalReceivedData;    /**< total data received, user should reset to 0 as needed to prevent overflow */
+        enet_uint32           totalReceivedPackets; /**< total UDP packets received, user should reset to 0 as needed to prevent overflow */
         ENetProtocol          commands[ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS];
         size_t                commandCount;
         ENetBuffer            buffers[ENET_BUFFER_MAXIMUM];
         size_t                bufferCount;
         ENetChecksumCallback  checksum; /**< callback the user can set to enable packet checksums for this host */
-        ENetCompressor        compressor;
         enet_uint8            packetData[2][ENET_PROTOCOL_MAXIMUM_MTU];
         ENetAddress           receivedAddress;
         enet_uint8 *          receivedData;
         size_t                receivedDataLength;
-        enet_uint32           totalSentData;        /**< total data sent, user should reset to 0 as needed to prevent overflow */
-        enet_uint32           totalSentPackets;     /**< total UDP packets sent, user should reset to 0 as needed to prevent overflow */
-        enet_uint32           totalReceivedData;    /**< total data received, user should reset to 0 as needed to prevent overflow */
-        enet_uint32           totalReceivedPackets; /**< total UDP packets received, user should reset to 0 as needed to prevent overflow */
         ENetInterceptCallback intercept;            /**< callback the user can set to intercept received raw UDP packets */
         size_t                connectedPeers;
         size_t                bandwidthLimitedPeers;
@@ -925,7 +907,6 @@ extern "C" {
     ENET_API int        enet_host_service (ENetHost *, ENetEvent *, enet_uint32);
     ENET_API void       enet_host_flush (ENetHost *);
     ENET_API void       enet_host_broadcast (ENetHost *, enet_uint8, ENetPacket *);
-    ENET_API void       enet_host_compress (ENetHost *, const ENetCompressor *);
     ENET_API void       enet_host_channel_limit (ENetHost *, size_t);
     ENET_API void       enet_host_bandwidth_limit (ENetHost *, enet_uint32, enet_uint32);
     extern   void       enet_host_bandwidth_throttle (ENetHost *);
@@ -1524,10 +1505,10 @@ extern "C" {
         if (event != NULL) {
             enet_protocol_change_state(host, peer, ENET_PEER_STATE_CONNECTED);
 
-            peer->totalDataSent = 0;
+            peer->totalDataSent     = 0;
             peer->totalDataReceived = 0;
-            peer->totalPacketsSent = 0;
-            peer->totalPacketsLost = 0;
+            peer->totalPacketsSent  = 0;
+            peer->totalPacketsLost  = 0;
             event->type = ENET_EVENT_TYPE_CONNECT;
             event->peer = peer;
             event->data = peer->eventData;
@@ -2400,28 +2381,6 @@ extern "C" {
             }
         }
 
-        if (flags & ENET_PROTOCOL_HEADER_FLAG_COMPRESSED) {
-            size_t originalSize;
-            if (host->compressor.context == NULL || host->compressor.decompress == NULL) {
-                return 0;
-            }
-
-            originalSize = host->compressor.decompress(host->compressor.context,
-                host->receivedData + headerSize,
-                host->receivedDataLength - headerSize,
-                host->packetData[1] + headerSize,
-                sizeof(host->packetData[1]) - headerSize
-            );
-
-            if (originalSize <= 0 || originalSize > sizeof(host->packetData[1]) - headerSize) {
-                return 0;
-            }
-
-            memcpy(host->packetData[1], header, headerSize);
-            host->receivedData       = host->packetData[1];
-            host->receivedDataLength = headerSize + originalSize;
-        }
-
         if (host->checksum != NULL) {
             enet_uint32 *checksum = (enet_uint32 *) &host->receivedData[headerSize - sizeof(enet_uint32)];
             enet_uint32 desiredChecksum = *checksum;
@@ -2966,7 +2925,6 @@ extern "C" {
         ENetProtocolHeader *header = (ENetProtocolHeader *) headerData;
         ENetPeer *currentPeer;
         int sentLength;
-        size_t shouldCompress = 0;
         host->continueSending = 1;
 
         while (host->continueSending)
@@ -3055,19 +3013,6 @@ extern "C" {
                     host->buffers->dataLength = (size_t) &((ENetProtocolHeader *) 0)->sentTime;
                 }
 
-                shouldCompress = 0;
-                if (host->compressor.context != NULL && host->compressor.compress != NULL) {
-                    size_t originalSize = host->packetSize - sizeof(ENetProtocolHeader),
-                      compressedSize    = host->compressor.compress(host->compressor.context, &host->buffers[1], host->bufferCount - 1, originalSize, host->packetData[1], originalSize);
-                    if (compressedSize > 0 && compressedSize < originalSize) {
-                        host->headerFlags |= ENET_PROTOCOL_HEADER_FLAG_COMPRESSED;
-                        shouldCompress     = compressedSize;
-                        #ifdef ENET_DEBUG_COMPRESS
-                        printf("peer %u: compressed %u->%u (%u%%)\n", currentPeer->incomingPeerID, originalSize, compressedSize, (compressedSize * 100) / originalSize);
-                        #endif
-                    }
-                }
-
                 if (currentPeer->outgoingPeerID < ENET_PROTOCOL_MAXIMUM_PEER_ID) {
                     host->headerFlags |= currentPeer->outgoingSessionID << ENET_PROTOCOL_HEADER_SESSION_SHIFT;
                 }
@@ -3077,12 +3022,6 @@ extern "C" {
                     *checksum = currentPeer->outgoingPeerID < ENET_PROTOCOL_MAXIMUM_PEER_ID ? currentPeer->connectID : 0;
                     host->buffers->dataLength += sizeof(enet_uint32);
                     *checksum = host->checksum(host->buffers, host->bufferCount);
-                }
-
-                if (shouldCompress > 0) {
-                    host->buffers[1].data       = host->packetData[1];
-                    host->buffers[1].dataLength = shouldCompress;
-                    host->bufferCount = 2;
                 }
 
                 currentPeer->lastSendTime = host->serviceTime;
@@ -4288,10 +4227,6 @@ extern "C" {
         host->duplicatePeers                = ENET_PROTOCOL_MAXIMUM_PEER_ID;
         host->maximumPacketSize             = ENET_HOST_DEFAULT_MAXIMUM_PACKET_SIZE;
         host->maximumWaitingData            = ENET_HOST_DEFAULT_MAXIMUM_WAITING_DATA;
-        host->compressor.context            = NULL;
-        host->compressor.compress           = NULL;
-        host->compressor.decompress         = NULL;
-        host->compressor.destroy            = NULL;
         host->intercept                     = NULL;
 
         enet_list_clear(&host->dispatchQueue);
@@ -4329,10 +4264,6 @@ extern "C" {
 
         for (currentPeer = host->peers; currentPeer < &host->peers[host->peerCount]; ++currentPeer) {
             enet_peer_reset(currentPeer);
-        }
-
-        if (host->compressor.context != NULL && host->compressor.destroy) {
-            (*host->compressor.destroy)(host->compressor.context);
         }
 
         enet_free(host->peers);
@@ -4443,22 +4374,6 @@ extern "C" {
 
         if (packet->referenceCount == 0) {
             enet_packet_destroy(packet);
-        }
-    }
-
-    /** Sets the packet compressor the host should use to compress and decompress packets.
-     *  @param host host to enable or disable compression for
-     *  @param compressor callbacks for for the packet compressor; if NULL, then compression is disabled
-     */
-    void enet_host_compress(ENetHost *host, const ENetCompressor *compressor) {
-        if (host->compressor.context != NULL && host->compressor.destroy) {
-            (*host->compressor.destroy)(host->compressor.context);
-        }
-
-        if (compressor) {
-            host->compressor = *compressor;
-        } else {
-            host->compressor.context = NULL;
         }
     }
 
