@@ -918,15 +918,16 @@ extern "C" {
     ENET_API enet_uint32 enet_peer_get_id(ENetPeer *);
     ENET_API enet_uint32 enet_peer_get_ip(ENetPeer *, char * ip, size_t ipLength);
     ENET_API enet_uint16 enet_peer_get_port(ENetPeer *);
-    ENET_API ENetPeerSta enet_peer_get_state(ENetPeer *);
     ENET_API enet_uint32 enet_peer_get_rtt(ENetPeer *);
     ENET_API enet_uint64 enet_peer_get_packets_sent(ENetPeer *);
     ENET_API enet_uint32 enet_peer_get_packets_lost(ENetPeer *);
     ENET_API enet_uint64 enet_peer_get_bytes_sent(ENetPeer *);
     ENET_API enet_uint64 enet_peer_get_bytes_received(ENetPeer *);
 
-    ENET_API void *      enet_peer_get_data(ENetPeer *);
-    ENET_API void        enet_peer_set_data(ENetPeer *, const void *);
+    ENET_API ENetPeerState enet_peer_get_state(ENetPeer *);
+
+    ENET_API void * enet_peer_get_data(ENetPeer *);
+    ENET_API void   enet_peer_set_data(ENetPeer *, const void *);
 
     ENET_API void *      enet_packet_get_data(ENetPacket *);
     ENET_API enet_uint32 enet_packet_get_length(ENetPacket *);
@@ -1543,18 +1544,11 @@ extern "C" {
         if (event != NULL) {
             enet_protocol_change_state(host, peer, ENET_PEER_STATE_CONNECTED);
 
-<<<<<<< HEAD
             peer->totalDataSent     = 0;
             peer->totalDataReceived = 0;
             peer->totalPacketsSent  = 0;
             peer->totalPacketsLost  = 0;
 
-=======
-            peer->totalDataSent = 0;
-            peer->totalDataReceived = 0;
-            peer->totalPacketsSent = 0;
-            peer->totalPacketsLost = 0;
->>>>>>> 49c98669270b83ce4b05785fa917e10cce389e00
             event->type = ENET_EVENT_TYPE_CONNECT;
             event->peer = peer;
             event->data = peer->eventData;
