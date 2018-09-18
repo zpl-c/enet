@@ -142,10 +142,10 @@
     #include <sys/ioctl.h>
     #include <sys/time.h>
     #include <sys/socket.h>
+    #include <poll.h>
     #include <arpa/inet.h>
     #include <netinet/in.h>
     #include <netinet/tcp.h>
-    #include <poll.h>
     #include <netdb.h>
     #include <unistd.h>
     #include <string.h>
@@ -252,17 +252,13 @@ extern "C" {
 
     extern void *enet_list_remove(ENetListIterator);
     extern void enet_list_clear(ENetList *);
-
     extern size_t enet_list_size(ENetList *);
 
     #define enet_list_begin(list) ((list)->sentinel.next)
     #define enet_list_end(list) (&(list)->sentinel)
-
     #define enet_list_empty(list) (enet_list_begin(list) == enet_list_end(list))
-
     #define enet_list_next(iterator) ((iterator)->next)
     #define enet_list_previous(iterator) ((iterator)->previous)
-
     #define enet_list_front(list) ((void *)(list)->sentinel.next)
     #define enet_list_back(list) ((void *)(list)->sentinel.previous)
 
@@ -832,7 +828,7 @@ extern "C" {
      * Initializes ENet globally.  Must be called prior to using any functions in ENet.
      * @returns 0 on success, < 0 on failure
      */
-    ENET_API int enet_initialize (void);
+    ENET_API int enet_initialize(void);
 
     /**
      * Initializes ENet globally and supplies user-overridden callbacks. Must be called prior to using any functions in ENet. Do not use enet_initialize() if you use this variant. Make sure the ENetCallbacks structure is zeroed out so that any additional callbacks added in future versions will be properly ignored.
@@ -841,21 +837,21 @@ extern "C" {
      * @param inits user-overridden callbacks where any NULL callbacks will use ENet's defaults
      * @returns 0 on success, < 0 on failure
      */
-    ENET_API int enet_initialize_with_callbacks (ENetVersion version, const ENetCallbacks * inits);
+    ENET_API int enet_initialize_with_callbacks(ENetVersion version, const ENetCallbacks * inits);
 
     /**
      * Shuts down ENet globally.  Should be called when a program that has initialized ENet exits.
      */
-    ENET_API void enet_deinitialize (void);
+    ENET_API void enet_deinitialize(void);
 
     /**
      * Gives the linked version of the ENet library.
      * @returns the version number
      */
-    ENET_API ENetVersion enet_linked_version (void);
+    ENET_API ENetVersion enet_linked_version(void);
 
     /** Returns the monotonic time in milliseconds. Its initial value is unspecified unless otherwise set. */
-    ENET_API enet_uint32 enet_time_get (void);
+    ENET_API enet_uint32 enet_time_get(void);
 
     /** ENet socket functions */
     ENET_API ENetSocket enet_socket_create(ENetSocketType);
@@ -881,7 +877,7 @@ extern "C" {
         @retval < 0 on failure
         @returns the address of the given hostName in address on success
     */
-    ENET_API int enet_address_set_host_ip (ENetAddress * address, const char * hostName);
+    ENET_API int enet_address_set_host_ip(ENetAddress * address, const char * hostName);
 
     /** Attempts to resolve the host named by the parameter hostName and sets
         the host field in the address parameter if successful.
@@ -891,7 +887,7 @@ extern "C" {
         @retval < 0 on failure
         @returns the address of the given hostName in address on success
     */
-    ENET_API int enet_address_set_host (ENetAddress * address, const char * hostName);
+    ENET_API int enet_address_set_host(ENetAddress * address, const char * hostName);
 
     /** Gives the printable form of the IP address specified in the address parameter.
         @param address    address printed
@@ -901,7 +897,7 @@ extern "C" {
         @retval 0 on success
         @retval < 0 on failure
     */
-    ENET_API int enet_address_get_host_ip (const ENetAddress * address, char * hostName, size_t nameLength);
+    ENET_API int enet_address_get_host_ip(const ENetAddress * address, char * hostName, size_t nameLength);
 
     /** Attempts to do a reverse lookup of the host field in the address parameter.
         @param address    address used for reverse lookup
@@ -911,46 +907,46 @@ extern "C" {
         @retval 0 on success
         @retval < 0 on failure
     */
-    ENET_API int enet_address_get_host (const ENetAddress * address, char * hostName, size_t nameLength);
+    ENET_API int enet_address_get_host(const ENetAddress * address, char * hostName, size_t nameLength);
 
-    ENET_API ENetPacket * enet_packet_create (const void *, size_t, enet_uint32);
-    ENET_API ENetPacket * enet_packet_create_offset (const void *, size_t, size_t, enet_uint32);
-    ENET_API void         enet_packet_destroy (ENetPacket *);
-    ENET_API enet_uint32  enet_crc32 (const ENetBuffer *, size_t);
+    ENET_API ENetPacket * enet_packet_create(const void *, size_t, enet_uint32);
+    ENET_API ENetPacket * enet_packet_create_offset(const void *, size_t, size_t, enet_uint32);
+    ENET_API void         enet_packet_destroy(ENetPacket *);
+    ENET_API enet_uint32  enet_crc32(const ENetBuffer *, size_t);
 
-    ENET_API ENetHost * enet_host_create (const ENetAddress *, size_t, size_t, enet_uint32, enet_uint32);
-    ENET_API void       enet_host_destroy (ENetHost *);
-    ENET_API ENetPeer * enet_host_connect (ENetHost *, const ENetAddress *, size_t, enet_uint32);
-    ENET_API int        enet_host_check_events (ENetHost *, ENetEvent *);
-    ENET_API int        enet_host_service (ENetHost *, ENetEvent *, enet_uint32);
-    ENET_API void       enet_host_flush (ENetHost *);
-    ENET_API void       enet_host_broadcast (ENetHost *, enet_uint8, ENetPacket *);
-    ENET_API void       enet_host_compress (ENetHost *, const ENetCompressor *);
-    ENET_API void       enet_host_channel_limit (ENetHost *, size_t);
-    ENET_API void       enet_host_bandwidth_limit (ENetHost *, enet_uint32, enet_uint32);
-    extern   void       enet_host_bandwidth_throttle (ENetHost *);
-    extern  enet_uint64 enet_host_random_seed (void);
+    ENET_API ENetHost * enet_host_create(const ENetAddress *, size_t, size_t, enet_uint32, enet_uint32);
+    ENET_API void       enet_host_destroy(ENetHost *);
+    ENET_API ENetPeer * enet_host_connect(ENetHost *, const ENetAddress *, size_t, enet_uint32);
+    ENET_API int        enet_host_check_events(ENetHost *, ENetEvent *);
+    ENET_API int        enet_host_service(ENetHost *, ENetEvent *, enet_uint32);
+    ENET_API void       enet_host_flush(ENetHost *);
+    ENET_API void       enet_host_broadcast(ENetHost *, enet_uint8, ENetPacket *);
+    ENET_API void       enet_host_compress(ENetHost *, const ENetCompressor *);
+    ENET_API void       enet_host_channel_limit(ENetHost *, size_t);
+    ENET_API void       enet_host_bandwidth_limit(ENetHost *, enet_uint32, enet_uint32);
+    extern   void       enet_host_bandwidth_throttle(ENetHost *);
+    extern  enet_uint64 enet_host_random_seed(void);
 
-    ENET_API int                 enet_peer_send (ENetPeer *, enet_uint8, ENetPacket *);
-    ENET_API ENetPacket *        enet_peer_receive (ENetPeer *, enet_uint8 * channelID);
-    ENET_API void                enet_peer_ping (ENetPeer *);
-    ENET_API void                enet_peer_ping_interval (ENetPeer *, enet_uint32);
-    ENET_API void                enet_peer_timeout (ENetPeer *, enet_uint32, enet_uint32, enet_uint32);
-    ENET_API void                enet_peer_reset (ENetPeer *);
-    ENET_API void                enet_peer_disconnect (ENetPeer *, enet_uint32);
-    ENET_API void                enet_peer_disconnect_now (ENetPeer *, enet_uint32);
-    ENET_API void                enet_peer_disconnect_later (ENetPeer *, enet_uint32);
-    ENET_API void                enet_peer_throttle_configure (ENetPeer *, enet_uint32, enet_uint32, enet_uint32);
-    extern int                   enet_peer_throttle (ENetPeer *, enet_uint32);
-    extern void                  enet_peer_reset_queues (ENetPeer *);
-    extern void                  enet_peer_setup_outgoing_command (ENetPeer *, ENetOutgoingCommand *);
-    extern ENetOutgoingCommand * enet_peer_queue_outgoing_command (ENetPeer *, const ENetProtocol *, ENetPacket *, enet_uint32, enet_uint16);
-    extern ENetIncomingCommand * enet_peer_queue_incoming_command (ENetPeer *, const ENetProtocol *, const void *, size_t, enet_uint32, enet_uint32);
-    extern ENetAcknowledgement * enet_peer_queue_acknowledgement (ENetPeer *, const ENetProtocol *, enet_uint16);
-    extern void                  enet_peer_dispatch_incoming_unreliable_commands (ENetPeer *, ENetChannel *);
-    extern void                  enet_peer_dispatch_incoming_reliable_commands (ENetPeer *, ENetChannel *);
-    extern void                  enet_peer_on_connect (ENetPeer *);
-    extern void                  enet_peer_on_disconnect (ENetPeer *);
+    ENET_API int                 enet_peer_send(ENetPeer *, enet_uint8, ENetPacket *);
+    ENET_API ENetPacket *        enet_peer_receive(ENetPeer *, enet_uint8 * channelID);
+    ENET_API void                enet_peer_ping(ENetPeer *);
+    ENET_API void                enet_peer_ping_interval(ENetPeer *, enet_uint32);
+    ENET_API void                enet_peer_timeout(ENetPeer *, enet_uint32, enet_uint32, enet_uint32);
+    ENET_API void                enet_peer_reset(ENetPeer *);
+    ENET_API void                enet_peer_disconnect(ENetPeer *, enet_uint32);
+    ENET_API void                enet_peer_disconnect_now(ENetPeer *, enet_uint32);
+    ENET_API void                enet_peer_disconnect_later(ENetPeer *, enet_uint32);
+    ENET_API void                enet_peer_throttle_configure(ENetPeer *, enet_uint32, enet_uint32, enet_uint32);
+    extern int                   enet_peer_throttle(ENetPeer *, enet_uint32);
+    extern void                  enet_peer_reset_queues(ENetPeer *);
+    extern void                  enet_peer_setup_outgoing_command(ENetPeer *, ENetOutgoingCommand *);
+    extern ENetOutgoingCommand * enet_peer_queue_outgoing_command(ENetPeer *, const ENetProtocol *, ENetPacket *, enet_uint32, enet_uint16);
+    extern ENetIncomingCommand * enet_peer_queue_incoming_command(ENetPeer *, const ENetProtocol *, const void *, size_t, enet_uint32, enet_uint32);
+    extern ENetAcknowledgement * enet_peer_queue_acknowledgement(ENetPeer *, const ENetProtocol *, enet_uint16);
+    extern void                  enet_peer_dispatch_incoming_unreliable_commands(ENetPeer *, ENetChannel *);
+    extern void                  enet_peer_dispatch_incoming_reliable_commands(ENetPeer *, ENetChannel *);
+    extern void                  enet_peer_on_connect(ENetPeer *);
+    extern void                  enet_peer_on_disconnect(ENetPeer *);
 
     extern size_t enet_protocol_command_size (enet_uint8);
 
