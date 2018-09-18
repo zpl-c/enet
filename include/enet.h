@@ -5536,7 +5536,7 @@ extern "C" {
     }
 
     int enet_address_get_host_ip(const ENetAddress *address, char *name, size_t nameLength) {
-        if (inet_ntop(AF_INET6, &address->host, name, nameLength) == NULL) {
+        if (inet_ntop(AF_INET6, (PVOID)&address->host, name, nameLength) == NULL) {
             return -1;
         }
 
