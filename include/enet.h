@@ -909,6 +909,30 @@ extern "C" {
     */
     ENET_API int enet_address_get_host(const ENetAddress * address, char * hostName, size_t nameLength);
 
+
+    ENET_API enet_uint32 enet_host_get_peers_count(ENetHost *);
+    ENET_API enet_uint32 enet_host_get_packets_sent(ENetHost *);
+    ENET_API enet_uint32 enet_host_get_packets_received(ENetHost *);
+    ENET_API enet_uint32 enet_host_get_bytes_sent(ENetHost *);
+    ENET_API enet_uint32 enet_host_get_bytes_received(ENetHost *);
+
+    ENET_API enet_uint32 enet_peer_get_id(ENetPeer *);
+    ENET_API enet_uint32 enet_peer_get_ip(ENetPeer *, char * ip, size_t ipLength);
+    ENET_API enet_uint16 enet_peer_get_port(ENetPeer *);
+    ENET_API ENetPeerSta enet_peer_get_state(ENetPeer *);
+    ENET_API enet_uint32 enet_peer_get_rtt(ENetPeer *);
+    ENET_API enet_uint64 enet_peer_get_packets_sent(ENetPeer *);
+    ENET_API enet_uint32 enet_peer_get_packets_lost(ENetPeer *);
+    ENET_API enet_uint64 enet_peer_get_bytes_sent(ENetPeer *);
+    ENET_API enet_uint64 enet_peer_get_bytes_received(ENetPeer *);
+
+    ENET_API void *      enet_peer_get_data(ENetPeer *);
+    ENET_API void        enet_peer_set_data(ENetPeer *, const void *);
+
+    ENET_API void *      enet_packet_get_data (ENetPacket *);
+    ENET_API enet_uint32 enet_packet_get_length (ENetPacket *);
+
+
     ENET_API ENetPacket * enet_packet_create(const void *, size_t, enet_uint32);
     ENET_API ENetPacket * enet_packet_create_offset(const void *, size_t, size_t, enet_uint32);
     ENET_API void         enet_packet_destroy(ENetPacket *);
@@ -3330,6 +3354,79 @@ extern "C" {
         }
 
         return 0;
+    }
+
+    /* Extended functionality for easier binding in other programming languages */
+    enet_uint32 enet_host_get_peers_count(ENetHost *host) {
+        return host->connectedPeers;
+    }
+
+    enet_uint32 enet_host_get_packets_sent(ENetHost *host) {
+        return host->totalSentPackets;
+    }
+
+    enet_uint32 enet_host_get_packets_received(ENetHost *host) {
+        return host->totalReceivedPackets;
+    }
+
+    enet_uint32 enet_host_get_bytes_sent(ENetHost *host) {
+        return host->totalSentData;
+    }
+
+    enet_uint32 enet_host_get_bytes_received(ENetHost *host) {
+        return host->totalReceivedData;
+    }
+
+    enet_uint32 enet_peer_get_id(ENetPeer *peer) {
+        return peer->connectID;
+    }
+
+    enet_uint32 enet_peer_get_ip(ENetPeer *peer, char *ip, size_t ipLength) {
+        return enet_address_get_host_ip(&peer->address, ip, ipLength);
+    }
+
+    enet_uint16 enet_peer_get_port(ENetPeer *peer) {
+        return peer->address.port;
+    }
+
+    ENetPeerState enet_peer_get_state(ENetPeer *peer) {
+        return peer->state;
+    }
+
+    enet_uint32 enet_peer_get_rtt(ENetPeer *peer) {
+        return peer->roundTripTime;
+    }
+
+    enet_uint64 enet_peer_get_packets_sent(ENetPeer *peer) {
+        return peer->totalPacketsSent;
+    }
+
+    enet_uint32 enet_peer_get_packets_lost(ENetPeer *peer) {
+        return peer->totalPacketsLost;
+    }
+
+    enet_uint64 enet_peer_get_bytes_sent(ENetPeer *peer) {
+        return peer->totalDataSent;
+    }
+
+    enet_uint64 enet_peer_get_bytes_received(ENetPeer *peer) {
+        return peer->totalDataReceived;
+    }
+
+    void * enet_peer_get_data(ENetPeer *peer) {
+        return (void *) peer->data;
+    }
+
+    void enet_peer_set_data(ENetPeer *peer, const void *data) {
+        peer->data = (enet_uint32 *) data;
+    }
+
+    void * enet_packet_get_data(ENetPacket *packet) {
+        return (void *) packet->data;
+    }
+
+    enet_uint32 enet_packet_get_length(ENetPacket *packet) {
+        return packet->dataLength;
     }
 
     /** Queues a packet to be sent.
