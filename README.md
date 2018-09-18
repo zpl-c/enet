@@ -48,8 +48,8 @@ we are trying to change some things, things, which can't be reflected on the mai
 ## Description
 
 ENet's purpose is to provide a relatively thin, simple and robust network communication
-layer on top of UDP (User Datagram Protocol).The primary feature it provides is optional
-reliable, in-order delivery of packets.
+layer on top of UDP (User Datagram Protocol). The primary feature it provides is optional
+reliable, in-order delivery of packets, and fragmentation.
 
 ENet omits certain higher level networking features such as authentication, lobbying,
 server discovery, encryption, or other similar tasks that are particularly application
@@ -57,7 +57,7 @@ specific so that the library remains flexible, portable, and easily embeddable.
 
 ## Installation (via npm)
 
-Install library using (omit `--save` if you dont have npm project initilized)
+Install library using (omit `--save` if you don't have npm project initilized)
 
 ```sh
 $ npm install enet.c --save
@@ -128,9 +128,9 @@ int main() {
 
 ## Usage (Direct, Preferred)
 
-In this case library will be built-in inside the project itself.
+In this case, library will be embedded to the project itself.
 
-Make sure you add a define for `ENET_IMPLEMENTATION` before including the `enet.h`.
+Make sure you add a define for `ENET_IMPLEMENTATION` exactly in one source file before including the `enet.h`.
 
 Here is a simple server demo, it will wait 1 second for events, and then exit if none were found:
 
@@ -172,24 +172,31 @@ int main() {
                 /* Store any relevant client information here. */
                 event.peer->data = "Client information";
                 break;
+
             case ENET_EVENT_TYPE_RECEIVE:
                 printf("A packet of length %lu containing %s was received from %s on channel %u.\n",
                         event.packet->dataLength,
                         event.packet->data,
                         event.peer->data,
                         event.channelID);
-
                 /* Clean up the packet now that we're done using it. */
                 enet_packet_destroy (event.packet);
                 break;
 
             case ENET_EVENT_TYPE_DISCONNECT:
-                printf ("%s disconnected.\n", event.peer->data);
+                printf("%s disconnected.\n", event.peer->data);
                 /* Reset the peer's client information. */
                 event.peer->data = NULL;
                 break;
 
-            case ENET_EVENT_TYPE_NONE: break;
+            case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT:
+                printf("%s disconnected due to timeout.\n", event.peer->data);
+                /* Reset the peer's client information. */
+                event.peer->data = NULL;
+                break;
+
+            case ENET_EVENT_TYPE_NONE:
+                break;
         }
     }
 
