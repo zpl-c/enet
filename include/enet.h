@@ -909,7 +909,6 @@ extern "C" {
     */
     ENET_API int enet_address_get_host(const ENetAddress * address, char * hostName, size_t nameLength);
 
-
     ENET_API enet_uint32 enet_host_get_peers_count(ENetHost *);
     ENET_API enet_uint32 enet_host_get_packets_sent(ENetHost *);
     ENET_API enet_uint32 enet_host_get_packets_received(ENetHost *);
@@ -929,9 +928,9 @@ extern "C" {
     ENET_API void *      enet_peer_get_data(ENetPeer *);
     ENET_API void        enet_peer_set_data(ENetPeer *, const void *);
 
-    ENET_API void *      enet_packet_get_data (ENetPacket *);
-    ENET_API enet_uint32 enet_packet_get_length (ENetPacket *);
-
+    ENET_API void *      enet_packet_get_data(ENetPacket *);
+    ENET_API enet_uint32 enet_packet_get_length(ENetPacket *);
+    ENET_API void        enet_packet_set_free_callback(ENetPacket *, const void *);
 
     ENET_API ENetPacket * enet_packet_create(const void *, size_t, enet_uint32);
     ENET_API ENetPacket * enet_packet_create_offset(const void *, size_t, size_t, enet_uint32);
@@ -1543,6 +1542,11 @@ extern "C" {
 
         if (event != NULL) {
             enet_protocol_change_state(host, peer, ENET_PEER_STATE_CONNECTED);
+
+            peer->totalDataSent     = 0;
+            peer->totalDataReceived = 0;
+            peer->totalPacketsSent  = 0;
+            peer->totalPacketsLost  = 0;
 
             event->type = ENET_EVENT_TYPE_CONNECT;
             event->peer = peer;
@@ -3427,6 +3431,10 @@ extern "C" {
 
     enet_uint32 enet_packet_get_length(ENetPacket *packet) {
         return packet->dataLength;
+    }
+
+    void enet_packet_set_free_callback(ENetPacket *packet, const void *callback) {
+        packet->freeCallback = callback;
     }
 
     /** Queues a packet to be sent.
