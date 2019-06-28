@@ -18,6 +18,7 @@ if (ENET_STATIC)
 endif()
 
 if (ENET_SHARED)
+    add_definitions(-DENET_DLL)
     add_library(enet SHARED test/library.c)
 
     if (WIN32)
