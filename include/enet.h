@@ -914,6 +914,8 @@ extern "C" {
     ENET_API enet_uint32 enet_host_get_packets_received(ENetHost *);
     ENET_API enet_uint32 enet_host_get_bytes_sent(ENetHost *);
     ENET_API enet_uint32 enet_host_get_bytes_received(ENetHost *);
+    ENET_API enet_uint32 enet_host_get_received_data(ENetHost *, enet_uint8** data);
+    ENET_API enet_uint32 enet_host_get_mtu(ENetHost *);
 
     ENET_API enet_uint32 enet_peer_get_id(ENetPeer *);
     ENET_API enet_uint32 enet_peer_get_ip(ENetPeer *, char * ip, size_t ipLength);
@@ -942,9 +944,12 @@ extern "C" {
     ENET_API void       enet_host_destroy(ENetHost *);
     ENET_API ENetPeer * enet_host_connect(ENetHost *, const ENetAddress *, size_t, enet_uint32);
     ENET_API int        enet_host_check_events(ENetHost *, ENetEvent *);
-    ENET_API int        enet_host_service(ENetHost *, ENetEvent *, enet_uint32);
+    ENET_API int        enet_host_service(ENetHost *, ENetEvent *, enet_uint32);    
+    ENET_API int        enet_host_send_raw(ENetHost *, const ENetAddress *, enet_uint8 *, size_t);
+    ENET_API int        enet_host_send_raw_ex(ENetHost *host, const ENetAddress* address, enet_uint8* data, size_t skipBytes, size_t bytesToSend);
+    ENET_API void       enet_host_set_intercept(ENetHost *, const ENetInterceptCallback);
     ENET_API void       enet_host_flush(ENetHost *);
-    ENET_API void       enet_host_broadcast(ENetHost *, enet_uint8, ENetPacket *);
+    ENET_API void       enet_host_broadcast(ENetHost *, enet_uint8, ENetPacket *);    
     ENET_API void       enet_host_compress(ENetHost *, const ENetCompressor *);
     ENET_API void       enet_host_channel_limit(ENetHost *, size_t);
     ENET_API void       enet_host_bandwidth_limit(ENetHost *, enet_uint32, enet_uint32);
@@ -3382,6 +3387,20 @@ extern "C" {
         return host->totalReceivedData;
     }
 
+    /** Gets received data buffer. Returns buffer length.
+     *  @param host host to access recevie buffer
+     *  @param data ouput parameter for recevied data
+     *  @retval buffer length
+     */
+    enet_uint32 enet_host_get_received_data(ENetHost *host, /*out*/ enet_uint8** data) {
+        *data = host->receivedData;
+        return host->receivedDataLength;
+    }
+
+    enet_uint32 enet_host_get_mtu(ENetHost *host) {
+        return host->mtu;
+    }
+
     enet_uint32 enet_peer_get_id(ENetPeer *peer) {
         return peer->connectID;
     }
@@ -4542,6 +4561,48 @@ extern "C" {
         if (packet->referenceCount == 0) {
             enet_packet_destroy(packet);
         }
+    }
+
+    /** Sends raw data to specified address. Useful when you want to send unconnected data using host's socket.         
+     *  @param host host sending data
+     *  @param address destination address
+     *  @param data data pointer
+     *  @param dataLength length of data to send
+     *  @retval >=0 bytes sent
+     *  @retval <0 error
+     *  @sa enet_socket_send
+     */
+    int enet_host_send_raw(ENetHost *host, const ENetAddress* address, enet_uint8* data, size_t dataLength) {
+        ENetBuffer buffer;
+        buffer.data = data;
+        buffer.dataLength = dataLength;
+        return enet_socket_send(host->socket, address, &buffer, 1);
+    }
+
+    /** Sends raw data to specified address with extended arguments. Allows to send only part of data, handy for other programming languages.
+     *  I.e. if you have data =- { 0, 1, 2, 3 } and call function as enet_host_send_raw_ex(data, 1, 2) then it will skip 1 byte and send 2 bytes { 1, 2 }.
+     *  @param host host sending data
+     *  @param address destination address
+     *  @param data data pointer
+     *  @param skipBytes number of bytes to skip from start of data
+     *  @param bytesToSend number of bytes to send
+     *  @retval >=0 bytes sent
+     *  @retval <0 error
+     *  @sa enet_socket_send
+     */
+    int enet_host_send_raw_ex(ENetHost *host, const ENetAddress* address, enet_uint8* data, size_t skipBytes, size_t bytesToSend) {
+        ENetBuffer buffer;
+        buffer.data = data + skipBytes;
+        buffer.dataLength = bytesToSend;
+        return enet_socket_send(host->socket, address, &buffer, 1);
+    }
+
+    /** Sets intercept callback for the host.
+     *  @param host host to set a callback
+     *  @param callback intercept callback
+     */
+    void enet_host_set_intercept(ENetHost *host, const ENetInterceptCallback callback) {
+        host->intercept = callback;
     }
 
     /** Sets the packet compressor the host should use to compress and decompress packets.
