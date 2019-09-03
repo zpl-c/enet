@@ -946,7 +946,7 @@ extern "C" {
     ENET_API int        enet_host_check_events(ENetHost *, ENetEvent *);
     ENET_API int        enet_host_service(ENetHost *, ENetEvent *, enet_uint32);    
     ENET_API int        enet_host_send_raw(ENetHost *, const ENetAddress *, enet_uint8 *, size_t);
-    ENET_API int        enet_host_send_raw_offset(ENetHost *, const ENetAddress *, enet_uint8 *, size_t, size_t);
+    ENET_API int        enet_host_send_raw_ex(ENetHost *host, const ENetAddress* address, enet_uint8* data, size_t skipBytes, size_t bytesToSend);
     ENET_API void       enet_host_set_intercept(ENetHost *, const ENetInterceptCallback);
     ENET_API void       enet_host_flush(ENetHost *);
     ENET_API void       enet_host_broadcast(ENetHost *, enet_uint8, ENetPacket *);    
@@ -4579,20 +4579,21 @@ extern "C" {
         return enet_socket_send(host->socket, address, &buffer, 1);
     }
 
-    /** Sends raw data to specified address. Useful when you want to send unconnected data using host's socket.     
+    /** Sends raw data to specified address with extended arguments. Allows to send only part of data, handy for other programming languages.
+     *  I.e. if you have data =- { 0, 1, 2, 3 } and call function as enet_host_send_raw_ex(data, 1, 2) then it will skip 1 byte and send 2 bytes { 1, 2 }.
      *  @param host host sending data
      *  @param address destination address
      *  @param data data pointer
-     *  @param dataOffset data offset
-     *  @param dataLength length of data to send from offset
+     *  @param skipBytes number of bytes to skip from start of data
+     *  @param bytesToSend number of bytes to send
      *  @retval >=0 bytes sent
      *  @retval <0 error
      *  @sa enet_socket_send
      */
-    int enet_host_send_raw_offset(ENetHost *host, const ENetAddress* address, enet_uint8* data, size_t dataOffset, size_t dataLength) {
+    int enet_host_send_raw_ex(ENetHost *host, const ENetAddress* address, enet_uint8* data, size_t skipBytes, size_t bytesToSend) {
         ENetBuffer buffer;
-        buffer.data = data + dataOffset;
-        buffer.dataLength = dataLength;
+        buffer.data = data + skipBytes;
+        buffer.dataLength = bytesToSend;
         return enet_socket_send(host->socket, address, &buffer, 1);
     }
 
