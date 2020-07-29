@@ -1472,7 +1472,7 @@ extern "C" {
     }
 
     static void enet_protocol_change_state(ENetHost *host, ENetPeer *peer, ENetPeerState state) {
-		ENET_UNUSED(host)
+        ENET_UNUSED(host)
 
         if (state == ENET_PEER_STATE_CONNECTED || state == ENET_PEER_STATE_DISCONNECT_LATER) {
             enet_peer_on_connect(peer);
@@ -1707,7 +1707,7 @@ extern "C" {
     } /* enet_protocol_remove_sent_reliable_command */
 
     static ENetPeer * enet_protocol_handle_connect(ENetHost *host, ENetProtocolHeader *header, ENetProtocol *command) {
-		ENET_UNUSED(header)
+        ENET_UNUSED(header)
 
         enet_uint8 incomingSessionID, outgoingSessionID;
         enet_uint32 mtu, windowSize;
@@ -2154,8 +2154,8 @@ extern "C" {
     } /* enet_protocol_handle_send_unreliable_fragment */
 
     static int enet_protocol_handle_ping(ENetHost *host, ENetPeer *peer, const ENetProtocol *command) {
-		ENET_UNUSED(host)
-		ENET_UNUSED(command)
+        ENET_UNUSED(host)
+        ENET_UNUSED(command)
 
         if (peer->state != ENET_PEER_STATE_CONNECTED && peer->state != ENET_PEER_STATE_DISCONNECT_LATER) {
             return -1;
@@ -2200,7 +2200,7 @@ extern "C" {
     } /* enet_protocol_handle_bandwidth_limit */
 
     static int enet_protocol_handle_throttle_configure(ENetHost *host, ENetPeer *peer, const ENetProtocol *command) {
-		ENET_UNUSED(host)
+        ENET_UNUSED(host)
 
         if (peer->state != ENET_PEER_STATE_CONNECTED && peer->state != ENET_PEER_STATE_DISCONNECT_LATER) {
             return -1;
@@ -3630,7 +3630,7 @@ extern "C" {
     }
 
     static void enet_peer_remove_incoming_commands(ENetList *queue, ENetListIterator startCommand, ENetListIterator endCommand) {
-		ENET_UNUSED(queue)
+        ENET_UNUSED(queue)
 
         ENetListIterator currentCommand;
 
