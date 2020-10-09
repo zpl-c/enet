@@ -943,6 +943,7 @@ extern "C" {
     ENET_API enet_uint32 enet_packet_get_length(ENetPacket *);
     ENET_API void        enet_packet_set_free_callback(ENetPacket *, void *);
 
+    ENET_API ENetPacket * enet_packet_create_offset(const void *, size_t, size_t, enet_uint32);
     ENET_API enet_uint32  enet_crc32(const ENetBuffer *, size_t);
 
     ENET_API ENetHost * enet_host_create(const ENetAddress *, size_t, size_t, enet_uint32, enet_uint32);
