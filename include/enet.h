@@ -11,7 +11,7 @@
  * The MIT License (MIT)
  *
  * Copyright (c) 2002-2016 Lee Salzman
- * Copyright (c) 2017-2018 Vladyslav Hrytsenko, Dominik Madarász
+ * Copyright (c) 2017-2021 Vladyslav Hrytsenko, Dominik Madarász
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
