@@ -236,6 +236,7 @@ extern "C" {
     extern void *enet_malloc(size_t);
     extern void enet_free(void *);
     extern ENetPacket* enet_packet_create(const void*,size_t,enet_uint32);
+    extern ENetPacket* enet_packet_copy(ENetPacket*);
     extern void enet_packet_destroy(ENetPacket*);
 
 // =======================================================================//
@@ -1386,6 +1387,10 @@ extern "C" {
         packet->userData     = NULL;
 
         return packet;
+    }
+
+    ENetPacket *enet_packet_copy(ENetPacket *packet) {
+        return enet_packet_create(packet->data, packet->dataLength, packet->flags);
     }
 
     /**
