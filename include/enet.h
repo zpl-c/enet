@@ -4980,7 +4980,7 @@ extern "C" {
         return (enet_uint32)(result_in_ns / ns_in_ms);
     }
 
-    inline void enet_inaddr_map4to6(struct in_addr in, struct in6_addr *out)
+    void enet_inaddr_map4to6(struct in_addr in, struct in6_addr *out)
     {
         if (in.s_addr == 0x00000000) { /* 0.0.0.0 */
             *out = enet_v6_anyaddr;
@@ -4996,7 +4996,7 @@ extern "C" {
             out->s6_addr[15] = ((uint8_t *)&in.s_addr)[3];
         }
     }
-    inline void enet_inaddr_map6to4(const struct in6_addr *in, struct in_addr *out)
+    void enet_inaddr_map6to4(const struct in6_addr *in, struct in_addr *out)
     {
         memset(out, 0, sizeof(struct in_addr));
         ((uint8_t *)&out->s_addr)[0] = in->s6_addr[12];
