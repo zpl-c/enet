@@ -202,6 +202,9 @@
 #define ENET_MIN(x, y) ((x) < (y) ? (x) : (y))
 
 #define ENET_IPV6           1
+const struct in6_addr enet_v6_anyaddr   = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }}};
+const struct in6_addr enet_v6_noaddr    = {{{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }}};
+const struct in6_addr enet_v6_localhost = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 }}};
 #define ENET_HOST_ANY       in6addr_any
 #define ENET_HOST_BROADCAST 0xFFFFFFFFU
 #define ENET_PORT_ANY       0
@@ -1197,6 +1200,31 @@ extern "C" {
     #undef AT_HAVE_ATOMICS
 
 #endif /* defined(_MSC_VER) */
+
+    inline void enet_inaddr_map4to6(struct in_addr in, struct in6_addr *out)
+    {
+        if (in.s_addr == 0x00000000) {
+            *out = enet_v6_anyaddr;
+        } else if (in.s_addr == 0xFFFFFFFF) {
+            *out = enet_v6_noaddr;
+        } else {
+            *out = enet_v6_anyaddr;
+            out->s6_addr[10] = 0xFF;
+            out->s6_addr[11] = 0xFF;
+            out->s6_addr[12] = ((uint8_t *)&in.s_addr)[0];
+            out->s6_addr[13] = ((uint8_t *)&in.s_addr)[1];
+            out->s6_addr[14] = ((uint8_t *)&in.s_addr)[2];
+            out->s6_addr[15] = ((uint8_t *)&in.s_addr)[3];
+        }
+    }
+    inline void enet_inaddr_map6to4(const struct in6_addr *in, struct in_addr *out)
+    {
+        memset(out, 0, sizeof(struct in_addr));
+        ((uint8_t *)&out->s_addr)[0] = in->s6_addr[12];
+        ((uint8_t *)&out->s_addr)[1] = in->s6_addr[13];
+        ((uint8_t *)&out->s_addr)[2] = in->s6_addr[14];
+        ((uint8_t *)&out->s_addr)[3] = in->s6_addr[15];
+    }
 
 
 // =======================================================================//
@@ -5175,62 +5203,77 @@ extern "C" {
         return (enet_uint64) time(NULL);
     }
 
-    int enet_address_set_host_ip(ENetAddress *address, const char *name) {
-        if (!inet_pton(AF_INET6, name, &address->host)) {
-            return -1;
-        }
-
-        return 0;
-    }
-
-    int enet_address_set_host(ENetAddress *address, const char *name) {
+    int enet_in6addr_lookup_host(const char *name, bool nodns, struct in6_addr *out) {
         struct addrinfo hints, *resultList = NULL, *result = NULL;
 
         memset(&hints, 0, sizeof(hints));
         hints.ai_family = AF_UNSPEC;
 
+        if (nodns)
+        {
+            hints.ai_flags = AI_NUMERICHOST; /* prevent actual DNS lookups! */
+        }
+
         if (getaddrinfo(name, NULL, &hints, &resultList) != 0) {
+            if (resultList != NULL) {
+                freeaddrinfo(resultList);
+            }
+
             return -1;
         }
 
         for (result = resultList; result != NULL; result = result->ai_next) {
-            if (result->ai_addr != NULL && result->ai_addrlen >= sizeof(struct sockaddr_in)) {
-                if (result->ai_family == AF_INET) {
-                    struct sockaddr_in * sin = (struct sockaddr_in *) result->ai_addr;
+            if (result->ai_addr != NULL) {
+                if (result->ai_family == AF_INET || (result->ai_family == AF_UNSPEC && result->ai_addrlen == sizeof(struct sockaddr_in))) {
+                    enet_inaddr_map4to6(((struct sockaddr_in*)result->ai_addr)->sin_addr, out);
 
-                    ((uint32_t *)&address->host.s6_addr)[0] = 0;
-                    ((uint32_t *)&address->host.s6_addr)[1] = 0;
-                    ((uint32_t *)&address->host.s6_addr)[2] = htonl(0xffff);
-                    ((uint32_t *)&address->host.s6_addr)[3] = sin->sin_addr.s_addr;
-
-                    freeaddrinfo(resultList);
+                    if (resultList != NULL) {
+                        freeaddrinfo(resultList);
+                    }
 
                     return 0;
-                }
-                else if(result->ai_family == AF_INET6) {
-                    struct sockaddr_in6 * sin = (struct sockaddr_in6 *)result->ai_addr;
+                } else if (result->ai_family == AF_INET6 || (result->ai_family == AF_UNSPEC && result->ai_addrlen == sizeof(struct sockaddr_in6))) {
+                    memcpy(out, &((struct sockaddr_in6*)result->ai_addr)->sin6_addr, sizeof(struct sockaddr_in6));
 
-                    address->host = sin->sin6_addr;
-                    address->sin6_scope_id = sin->sin6_scope_id;
-
-                    freeaddrinfo(resultList);
+                    if (resultList != NULL) {
+                        freeaddrinfo(resultList);
+                    }
 
                     return 0;
                 }
             }
         }
 
-
         if (resultList != NULL) {
             freeaddrinfo(resultList);
         }
 
-        return enet_address_set_host_ip(address, name);
-    } /* enet_address_set_host */
+        return -1;
+    }
+
+    int enet_address_set_host_ip(ENetAddress *address, const char *name) {
+        return enet_in6addr_lookup_host(name, true, &address->host);
+    }
+
+    int enet_address_set_host(ENetAddress *address, const char *name) {
+        return enet_in6addr_lookup_host(name, false, &address->host);
+    }
 
     int enet_address_get_host_ip(const ENetAddress *address, char *name, size_t nameLength) {
-        if (inet_ntop(AF_INET6, &address->host, name, nameLength) == NULL) {
-            return -1;
+        if (IN6_IS_ADDR_V4MAPPED(&address->host))
+        {
+            struct in_addr buf;
+            enet_inaddr_map6to4(&address->host, &buf);
+
+            if (inet_ntop(AF_INET, &buf, name, nameLength) == NULL) {
+                return -1;
+            }
+        }
+        else
+        {
+            if (inet_ntop(AF_INET6, &address->host, name, nameLength) == NULL) {
+                return -1;
+            }
         }
 
         return 0;
