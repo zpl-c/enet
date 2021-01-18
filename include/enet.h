@@ -5035,7 +5035,7 @@ extern "C" {
 
                     return 0;
                 } else if (result->ai_family == AF_INET6 || (result->ai_family == AF_UNSPEC && result->ai_addrlen == sizeof(struct sockaddr_in6))) {
-                    memcpy(out, &((struct sockaddr_in6*)result->ai_addr)->sin6_addr, sizeof(struct sockaddr_in6));
+                    memcpy(out, &((struct sockaddr_in6*)result->ai_addr)->sin6_addr, sizeof(struct in6_addr));
 
                     if (resultList != NULL) {
                         freeaddrinfo(resultList);
