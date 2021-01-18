@@ -1204,32 +1204,6 @@ extern "C" {
 
 #endif /* defined(_MSC_VER) */
 
-    inline void enet_inaddr_map4to6(struct in_addr in, struct in6_addr *out)
-    {
-        if (in.s_addr == 0x00000000) { /* 0.0.0.0 */
-            *out = enet_v6_anyaddr;
-        } else if (in.s_addr == 0xFFFFFFFF) { /* 255.255.255.255 */
-            *out = enet_v6_noaddr;
-        } else {
-            *out = enet_v4_anyaddr;
-            out->s6_addr[10] = 0xFF;
-            out->s6_addr[11] = 0xFF;
-            out->s6_addr[12] = ((uint8_t *)&in.s_addr)[0];
-            out->s6_addr[13] = ((uint8_t *)&in.s_addr)[1];
-            out->s6_addr[14] = ((uint8_t *)&in.s_addr)[2];
-            out->s6_addr[15] = ((uint8_t *)&in.s_addr)[3];
-        }
-    }
-    inline void enet_inaddr_map6to4(const struct in6_addr *in, struct in_addr *out)
-    {
-        memset(out, 0, sizeof(struct in_addr));
-        ((uint8_t *)&out->s_addr)[0] = in->s6_addr[12];
-        ((uint8_t *)&out->s_addr)[1] = in->s6_addr[13];
-        ((uint8_t *)&out->s_addr)[2] = in->s6_addr[14];
-        ((uint8_t *)&out->s_addr)[3] = in->s6_addr[15];
-    }
-
-
 // =======================================================================//
 // !
 // ! Callbacks
@@ -5004,6 +4978,31 @@ extern "C" {
 
         uint64_t result_in_ns = current_time_ns - offset_ns;
         return (enet_uint32)(result_in_ns / ns_in_ms);
+    }
+
+    inline void enet_inaddr_map4to6(struct in_addr in, struct in6_addr *out)
+    {
+        if (in.s_addr == 0x00000000) { /* 0.0.0.0 */
+            *out = enet_v6_anyaddr;
+        } else if (in.s_addr == 0xFFFFFFFF) { /* 255.255.255.255 */
+            *out = enet_v6_noaddr;
+        } else {
+            *out = enet_v4_anyaddr;
+            out->s6_addr[10] = 0xFF;
+            out->s6_addr[11] = 0xFF;
+            out->s6_addr[12] = ((uint8_t *)&in.s_addr)[0];
+            out->s6_addr[13] = ((uint8_t *)&in.s_addr)[1];
+            out->s6_addr[14] = ((uint8_t *)&in.s_addr)[2];
+            out->s6_addr[15] = ((uint8_t *)&in.s_addr)[3];
+        }
+    }
+    inline void enet_inaddr_map6to4(const struct in6_addr *in, struct in_addr *out)
+    {
+        memset(out, 0, sizeof(struct in_addr));
+        ((uint8_t *)&out->s_addr)[0] = in->s6_addr[12];
+        ((uint8_t *)&out->s_addr)[1] = in->s6_addr[13];
+        ((uint8_t *)&out->s_addr)[2] = in->s6_addr[14];
+        ((uint8_t *)&out->s_addr)[3] = in->s6_addr[15];
     }
 
     int enet_in6addr_lookup_host(const char *name, bool nodns, struct in6_addr *out) {
