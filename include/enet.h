@@ -192,6 +192,15 @@
     #define ENET_SOCKETSET_CHECK(sockset, socket)  FD_ISSET(socket, &(sockset))
 #endif
 
+#ifdef __GNUC__
+#define ENET_DEPRECATED(func) func __attribute__ ((deprecated))
+#elif defined(_MSC_VER)
+#define ENET_DEPRECATED(func) __declspec(deprecated) func
+#else
+#pragma message("WARNING: Please ENET_DEPRECATED for this compiler")
+#define ENET_DEPRECATED(func) func
+#endif
+
 #ifndef ENET_BUFFER_MAXIMUM
 #define ENET_BUFFER_MAXIMUM (1 + 2 * ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS)
 #endif
@@ -892,7 +901,7 @@ extern "C" {
         @retval < 0 on failure
         @returns the address of the given hostName in address on success
     */
-    ENET_API int enet_address_set_host_ip(ENetAddress * address, const char * hostName);
+    ENET_DEPRECATED(ENET_API int enet_address_set_host_ip_old(ENetAddress * address, const char * hostName));
 
     /** Attempts to resolve the host named by the parameter hostName and sets
         the host field in the address parameter if successful.
@@ -902,7 +911,7 @@ extern "C" {
         @retval < 0 on failure
         @returns the address of the given hostName in address on success
     */
-    ENET_API int enet_address_set_host(ENetAddress * address, const char * hostName);
+    ENET_DEPRECATED(ENET_API int enet_address_set_host_old(ENetAddress * address, const char * hostName));
 
     /** Gives the printable form of the IP address specified in the address parameter.
         @param address    address printed
@@ -912,7 +921,7 @@ extern "C" {
         @retval 0 on success
         @retval < 0 on failure
     */
-    ENET_API int enet_address_get_host_ip(const ENetAddress * address, char * hostName, size_t nameLength);
+    ENET_DEPRECATED(ENET_API int enet_address_get_host_ip_old(const ENetAddress * address, char * hostName, size_t nameLength));
 
     /** Attempts to do a reverse lookup of the host field in the address parameter.
         @param address    address used for reverse lookup
@@ -922,7 +931,24 @@ extern "C" {
         @retval 0 on success
         @retval < 0 on failure
     */
-    ENET_API int enet_address_get_host(const ENetAddress * address, char * hostName, size_t nameLength);
+    ENET_DEPRECATED(ENET_API int enet_address_get_host_old(const ENetAddress * address, char * hostName, size_t nameLength));
+
+    ENET_API int enet_address_set_host_ip_new(ENetAddress * address, const char * hostName);
+    ENET_API int enet_address_set_host_new(ENetAddress * address, const char * hostName);
+    ENET_API int enet_address_get_host_ip_new(const ENetAddress * address, char * hostName, size_t nameLength);
+    ENET_API int enet_address_get_host_new(const ENetAddress * address, char * hostName, size_t nameLength);
+
+#ifdef ENET_FEATURE_ADDRESS_MAPPING
+#define enet_address_set_host_ip enet_address_set_host_ip_new
+#define enet_address_set_host    enet_address_set_host_new
+#define enet_address_get_host_ip enet_address_get_host_ip_new
+#define enet_address_get_host    enet_address_get_host_new
+#else
+#define enet_address_set_host_ip enet_address_set_host_ip_old
+#define enet_address_set_host    enet_address_set_host_old
+#define enet_address_get_host_ip enet_address_get_host_ip_old
+#define enet_address_get_host    enet_address_get_host_old
+#endif
 
     ENET_API enet_uint32 enet_host_get_peers_count(ENetHost *);
     ENET_API enet_uint32 enet_host_get_packets_sent(ENetHost *);
@@ -5053,17 +5079,16 @@ extern "C" {
         return -1;
     }
 
-    int enet_address_set_host_ip(ENetAddress *address, const char *name) {
+    int enet_address_set_host_ip_new(ENetAddress *address, const char *name) {
         return enet_in6addr_lookup_host(name, true, &address->host);
     }
 
-    int enet_address_set_host(ENetAddress *address, const char *name) {
+    int enet_address_set_host_new(ENetAddress *address, const char *name) {
         return enet_in6addr_lookup_host(name, false, &address->host);
     }
 
-    int enet_address_get_host_ip(const ENetAddress *address, char *name, size_t nameLength) {
-        if (IN6_IS_ADDR_V4MAPPED(&address->host))
-        {
+    int enet_address_get_host_ip_new(const ENetAddress *address, char *name, size_t nameLength) {
+        if (IN6_IS_ADDR_V4MAPPED(&address->host)) {
             struct in_addr buf;
             enet_inaddr_map6to4(&address->host, &buf);
 
@@ -5071,15 +5096,40 @@ extern "C" {
                 return -1;
             }
         }
-        else
-        {
+        else {
             if (inet_ntop(AF_INET6, &address->host, name, nameLength) == NULL) {
                 return -1;
             }
         }
 
         return 0;
-    }
+    } /* enet_address_get_host_ip_new */
+
+    int enet_address_get_host_new(const ENetAddress *address, char *name, size_t nameLength) {
+        struct sockaddr_in6 sin;
+        memset(&sin, 0, sizeof(struct sockaddr_in6));
+
+        int err;
+
+
+        sin.sin6_family = AF_INET6;
+        sin.sin6_port = ENET_HOST_TO_NET_16 (address->port);
+        sin.sin6_addr = address->host;
+        sin.sin6_scope_id = address->sin6_scope_id;
+
+        err = getnameinfo((struct sockaddr *) &sin, sizeof(sin), name, nameLength, NULL, 0, NI_NAMEREQD);
+        if (!err) {
+            if (name != NULL && nameLength > 0 && !memchr(name, '\0', nameLength)) {
+                return -1;
+            }
+            return 0;
+        }
+        if (err != EAI_NONAME) {
+            return -1;
+        }
+
+        return enet_address_get_host_ip_new(address, name, nameLength);
+    } /* enet_address_get_host_new */
 
 // =======================================================================//
 // !
@@ -5270,7 +5320,7 @@ extern "C" {
             }
         }
     #endif // __MINGW__
-    
+
     int enet_initialize(void) {
         return 0;
     }
@@ -5281,17 +5331,75 @@ extern "C" {
         return (enet_uint64) time(NULL);
     }
 
-    int enet_address_get_host(const ENetAddress *address, char *name, size_t nameLength) {
+    int enet_address_set_host_ip_old(ENetAddress *address, const char *name) {
+        if (!inet_pton(AF_INET6, name, &address->host)) {
+            return -1;
+        }
+
+        return 0;
+    }
+
+    int enet_address_set_host_old(ENetAddress *address, const char *name) {
+        struct addrinfo hints, *resultList = NULL, *result = NULL;
+
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_family = AF_UNSPEC;
+
+        if (getaddrinfo(name, NULL, &hints, &resultList) != 0) {
+            return -1;
+        }
+
+        for (result = resultList; result != NULL; result = result->ai_next) {
+            if (result->ai_addr != NULL && result->ai_addrlen >= sizeof(struct sockaddr_in)) {
+                if (result->ai_family == AF_INET) {
+                    struct sockaddr_in * sin = (struct sockaddr_in *) result->ai_addr;
+
+                    ((uint32_t *)&address->host.s6_addr)[0] = 0;
+                    ((uint32_t *)&address->host.s6_addr)[1] = 0;
+                    ((uint32_t *)&address->host.s6_addr)[2] = htonl(0xffff);
+                    ((uint32_t *)&address->host.s6_addr)[3] = sin->sin_addr.s_addr;
+
+                    freeaddrinfo(resultList);
+
+                    return 0;
+                }
+                else if(result->ai_family == AF_INET6) {
+                    struct sockaddr_in6 * sin = (struct sockaddr_in6 *)result->ai_addr;
+
+                    address->host = sin->sin6_addr;
+                    address->sin6_scope_id = sin->sin6_scope_id;
+
+                    freeaddrinfo(resultList);
+
+                    return 0;
+                }
+            }
+        }
+
+
+        if (resultList != NULL) {
+            freeaddrinfo(resultList);
+        }
+
+        return enet_address_set_host_ip(address, name);
+    } /* enet_address_set_host_old */
+
+    int enet_address_get_host_ip_old(const ENetAddress *address, char *name, size_t nameLength) {
+        if (inet_ntop(AF_INET6, &address->host, name, nameLength) == NULL) {
+            return -1;
+        }
+
+        return 0;
+    }
+
+    int enet_address_get_host_old(const ENetAddress *address, char *name, size_t nameLength) {
         struct sockaddr_in6 sin;
         int err;
-
         memset(&sin, 0, sizeof(struct sockaddr_in6));
-
         sin.sin6_family = AF_INET6;
         sin.sin6_port = ENET_HOST_TO_NET_16 (address->port);
         sin.sin6_addr = address->host;
         sin.sin6_scope_id = address->sin6_scope_id;
-
         err = getnameinfo((struct sockaddr *) &sin, sizeof(sin), name, nameLength, NULL, 0, NI_NAMEREQD);
         if (!err) {
             if (name != NULL && nameLength > 0 && !memchr(name, '\0', nameLength)) {
@@ -5302,9 +5410,8 @@ extern "C" {
         if (err != EAI_NONAME) {
             return -1;
         }
-
         return enet_address_get_host_ip(address, name, nameLength);
-    } /* enet_address_get_host */
+    } /* enet_address_get_host_old */
 
     int enet_socket_bind(ENetSocket socket, const ENetAddress *address) {
         struct sockaddr_in6 sin;
@@ -5629,13 +5736,63 @@ extern "C" {
         return (enet_uint64) timeGetTime();
     }
 
-    int enet_address_get_host(const ENetAddress *address, char *name, size_t nameLength) {
+    int enet_address_set_host_ip_old(ENetAddress *address, const char *name) {
+        enet_uint8 vals[4] = { 0, 0, 0, 0 };
+        int i;
+
+        for (i = 0; i < 4; ++i) {
+            const char *next = name + 1;
+            if (*name != '0') {
+                long val = strtol(name, (char **) &next, 10);
+                if (val < 0 || val > 255 || next == name || next - name > 3) {
+                    return -1;
+                }
+                vals[i] = (enet_uint8) val;
+            }
+
+            if (*next != (i < 3 ? '.' : '\0')) {
+                return -1;
+            }
+            name = next + 1;
+        }
+
+        memcpy(&address->host, vals, sizeof(enet_uint32));
+        return 0;
+    }
+
+    int enet_address_set_host_old(ENetAddress *address, const char *name) {
+        struct hostent *hostEntry = NULL;
+        hostEntry = gethostbyname(name);
+
+        if (hostEntry == NULL || hostEntry->h_addrtype != AF_INET) {
+            if (!inet_pton(AF_INET6, name, &address->host)) {
+                return -1;
+            }
+
+            return 0;
+        }
+
+        ((enet_uint32 *)&address->host.s6_addr)[0] = 0;
+        ((enet_uint32 *)&address->host.s6_addr)[1] = 0;
+        ((enet_uint32 *)&address->host.s6_addr)[2] = htonl(0xffff);
+        ((enet_uint32 *)&address->host.s6_addr)[3] = *(enet_uint32 *)hostEntry->h_addr_list[0];
+
+        return 0;
+    }
+
+    int enet_address_get_host_ip_old(const ENetAddress *address, char *name, size_t nameLength) {
+        if (inet_ntop(AF_INET6, (PVOID)&address->host, name, nameLength) == NULL) {
+            return -1;
+        }
+
+        return 0;
+    }
+
+    int enet_address_get_host_old(const ENetAddress *address, char *name, size_t nameLength) {
         struct in6_addr in;
         struct hostent *hostEntry = NULL;
-
         in = address->host;
         hostEntry = gethostbyaddr((char *)&in, sizeof(struct in6_addr), AF_INET6);
-
         if (hostEntry == NULL) {
             return enet_address_get_host_ip(address, name, nameLength);
         } else {
@@ -5645,7 +5802,6 @@ extern "C" {
             }
             memcpy(name, hostEntry->h_name, hostLen + 1);
         }
-
         return 0;
     }
 
