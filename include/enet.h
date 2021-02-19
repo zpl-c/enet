@@ -1236,7 +1236,7 @@ extern "C" {
 // !
 // =======================================================================//
 
-    static ENetCallbacks callbacks = { malloc, free, abort, enet_packet_create, enet_packet_destroy };
+    ENetCallbacks callbacks = { malloc, free, abort, enet_packet_create, enet_packet_destroy };
 
     int enet_initialize_with_callbacks(ENetVersion version, const ENetCallbacks *inits) {
         if (version < ENET_VERSION_CREATE(1, 3, 0)) {
