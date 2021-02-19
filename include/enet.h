@@ -901,7 +901,7 @@ extern "C" {
         @retval < 0 on failure
         @returns the address of the given hostName in address on success
     */
-    ENET_DEPRECATED(ENET_API int enet_address_set_host_ip_old(ENetAddress * address, const char * hostName));
+    ENET_API int enet_address_set_host_ip_old(ENetAddress * address, const char * hostName);
 
     /** Attempts to resolve the host named by the parameter hostName and sets
         the host field in the address parameter if successful.
@@ -911,7 +911,7 @@ extern "C" {
         @retval < 0 on failure
         @returns the address of the given hostName in address on success
     */
-    ENET_DEPRECATED(ENET_API int enet_address_set_host_old(ENetAddress * address, const char * hostName));
+    ENET_API int enet_address_set_host_old(ENetAddress * address, const char * hostName);
 
     /** Gives the printable form of the IP address specified in the address parameter.
         @param address    address printed
@@ -921,7 +921,7 @@ extern "C" {
         @retval 0 on success
         @retval < 0 on failure
     */
-    ENET_DEPRECATED(ENET_API int enet_address_get_host_ip_old(const ENetAddress * address, char * hostName, size_t nameLength));
+    ENET_API int enet_address_get_host_ip_old(const ENetAddress * address, char * hostName, size_t nameLength);
 
     /** Attempts to do a reverse lookup of the host field in the address parameter.
         @param address    address used for reverse lookup
@@ -931,7 +931,7 @@ extern "C" {
         @retval 0 on success
         @retval < 0 on failure
     */
-    ENET_DEPRECATED(ENET_API int enet_address_get_host_old(const ENetAddress * address, char * hostName, size_t nameLength));
+    ENET_API int enet_address_get_host_old(const ENetAddress * address, char * hostName, size_t nameLength);
 
     ENET_API int enet_address_set_host_ip_new(ENetAddress * address, const char * hostName);
     ENET_API int enet_address_set_host_new(ENetAddress * address, const char * hostName);
