@@ -5031,7 +5031,7 @@ extern "C" {
         ((uint8_t *)&out->s_addr)[3] = in->s6_addr[15];
     }
 
-    int enet_in6addr_lookup_host(const char *name, bool nodns, struct in6_addr *out) {
+    int enet_in6addr_lookup_host(const char *name, bool nodns, ENetAddress *out) {
         struct addrinfo hints, *resultList = NULL, *result = NULL;
 
         memset(&hints, 0, sizeof(hints));
@@ -5053,7 +5053,8 @@ extern "C" {
         for (result = resultList; result != NULL; result = result->ai_next) {
             if (result->ai_addr != NULL) {
                 if (result->ai_family == AF_INET || (result->ai_family == AF_UNSPEC && result->ai_addrlen == sizeof(struct sockaddr_in))) {
-                    enet_inaddr_map4to6(((struct sockaddr_in*)result->ai_addr)->sin_addr, out);
+                    enet_inaddr_map4to6(((struct sockaddr_in*)result->ai_addr)->sin_addr, &out->host);
+                    out->sin6_scope_id = 0;
 
                     if (resultList != NULL) {
                         freeaddrinfo(resultList);
@@ -5061,7 +5062,8 @@ extern "C" {
 
                     return 0;
                 } else if (result->ai_family == AF_INET6 || (result->ai_family == AF_UNSPEC && result->ai_addrlen == sizeof(struct sockaddr_in6))) {
-                    memcpy(out, &((struct sockaddr_in6*)result->ai_addr)->sin6_addr, sizeof(struct in6_addr));
+                    memcpy(&out->host, &((struct sockaddr_in6*)result->ai_addr)->sin6_addr, sizeof(struct in6_addr));
+                    out->sin6_scope_id = (enet_uint16) ((struct sockaddr_in6*)result->ai_addr)->sin6_scope_id;
 
                     if (resultList != NULL) {
                         freeaddrinfo(resultList);
@@ -5080,11 +5082,11 @@ extern "C" {
     }
 
     int enet_address_set_host_ip_new(ENetAddress *address, const char *name) {
-        return enet_in6addr_lookup_host(name, true, &address->host);
+        return enet_in6addr_lookup_host(name, true, address);
     }
 
     int enet_address_set_host_new(ENetAddress *address, const char *name) {
-        return enet_in6addr_lookup_host(name, false, &address->host);
+        return enet_in6addr_lookup_host(name, false, address);
     }
 
     int enet_address_get_host_ip_new(const ENetAddress *address, char *name, size_t nameLength) {
