@@ -35,9 +35,9 @@ endif()
 
 
 if(MSVC)
-    target_compile_definitions(enet PRIVATE -W3)
+    target_compile_options(enet PRIVATE -W3)
 else()
-    target_compile_definitions(enet PRIVATE -Wno-error)
+    target_compile_options(enet PRIVATE -Wno-error)
 endif()
 
 target_include_directories(enet PUBLIC ${PROJECT_SOURCE_DIR}/include)
