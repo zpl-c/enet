@@ -1,14 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 project(enet C)
 
-if(MSVC)
-	add_definitions(-W3)
-else()
-	add_definitions(-Wno-error)
-endif()
-
-target_include_directories(enet PUBLIC ${PROJECT_SOURCE_DIR}/include)
-
 if (ENET_STATIC)
     add_library(enet STATIC test/library.c)
 
@@ -33,3 +25,12 @@ if (ENET_TEST)
         target_link_libraries(enet_test winmm ws2_32)
     endif()
 endif()
+
+
+if(MSVC)
+    target_compile_definitions(enet PRIVATE -W3)
+else()
+    target_compile_definitions(enet PRIVATE -Wno-error)
+endif()
+
+target_include_directories(enet PUBLIC ${PROJECT_SOURCE_DIR}/include)
