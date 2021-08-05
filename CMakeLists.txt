@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.0)
 project(enet C)
 
+# defaults
+set(ENET_STATIC ON)
+set(ENET_SHARED OFF)
+set(ENET_TEST OFF)
+
+# configure projects
 if (ENET_STATIC)
     add_library(enet STATIC test/library.c)
 
@@ -10,7 +16,7 @@ if (ENET_STATIC)
 endif()
 
 if (ENET_SHARED)
-    add_definitions(-DENET_DLL)
+    target_compile_definitions(enet PUBLIC -DENET_DLL)
     add_library(enet SHARED test/library.c)
 
     if (WIN32)
