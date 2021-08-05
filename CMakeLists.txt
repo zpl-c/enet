@@ -20,6 +20,7 @@ endif()
 
 if (ENET_TEST)
     add_executable(enet_test test/build.c)
+    target_include_directories(enet_test PRIVATE ${PROJECT_SOURCE_DIR}/include)
 
     if (WIN32)
         target_link_libraries(enet_test PUBLIC winmm ws2_32)
