@@ -7,13 +7,13 @@ else()
 	add_definitions(-Wno-error)
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
+target_include_directories(enet PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 if (ENET_STATIC)
-    add_library(enet_static STATIC test/library.c)
+    add_library(enet STATIC test/library.c)
 
     if (WIN32)
-        target_link_libraries(enet_static winmm ws2_32)
+        target_link_libraries(enet winmm ws2_32)
     endif()
 endif()
 
