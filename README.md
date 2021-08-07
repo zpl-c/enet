@@ -65,6 +65,23 @@ $ npm install enet.c --save
 
 Add include path to the library `node_modules/enet.c/include` to your makefile/
 
+## Installation (via CMake >3.11)
+
+Install library by
+
+```cmake
+include(FetchContent)
+
+FetchContent_Declare(
+    enet
+    GIT_REPOSITORY https://github.com/zpl-c/enet.git
+    GIT_TAG YOUR_BRANCH_OR_TAG_OF_CHOICE
+)
+FetchContent_MakeAvailable(enet)
+```
+
+and link against the `enet` library in projects that necessitate it.
+
 ## Installation (manually)
 
 Download file [include/enet.h](https://raw.githubusercontent.com/zpl-c/enet/master/include/enet.h) and just add to your project.
