@@ -7,7 +7,7 @@ compiler:
   - clang
 
 script:
-  - cmake . -DCMAKE_BUILD_TYPE=Release -DENET_TEST=1 -DENET_SHARED=1
+  - cmake . -DCMAKE_BUILD_TYPE=Release -DENET_TEST=1 -DENET_SHARED=1 -DENET_STATIC=0
   - cmake --build .
   - ./enet_test
 
