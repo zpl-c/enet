@@ -2217,17 +2217,16 @@ extern "C" {
         if (peer->state != ENET_PEER_STATE_CONNECTED && peer->state != ENET_PEER_STATE_DISCONNECT_LATER) {
             return -1;
         }
-
         if (peer->incomingBandwidth != 0) {
             --host->bandwidthLimitedPeers;
         }
 
         peer->incomingBandwidth = ENET_NET_TO_HOST_32(command->bandwidthLimit.incomingBandwidth);
-        peer->outgoingBandwidth = ENET_NET_TO_HOST_32(command->bandwidthLimit.outgoingBandwidth);
-
         if (peer->incomingBandwidth != 0) {
             ++host->bandwidthLimitedPeers;
         }
+
+        peer->outgoingBandwidth = ENET_NET_TO_HOST_32(command->bandwidthLimit.outgoingBandwidth);
 
         if (peer->incomingBandwidth == 0 && host->outgoingBandwidth == 0) {
             peer->windowSize = ENET_PROTOCOL_MAXIMUM_WINDOW_SIZE;
