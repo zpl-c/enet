@@ -35,6 +35,7 @@
 #ifndef ENET_INCLUDE_H
 #define ENET_INCLUDE_H
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -4328,10 +4329,9 @@ extern "C" {
             memset(incomingCommand->fragments, 0, (fragmentCount + 31) / 32 * sizeof(enet_uint32));
         }
 
-        if (packet != NULL) {
-            ++packet->referenceCount;
-            peer->totalWaitingData += packet->dataLength;
-        }
+        assert(packet != NULL);
+        ++packet->referenceCount;
+        peer->totalWaitingData += packet->dataLength;
 
         enet_list_insert(enet_list_next(currentCommand), incomingCommand);
 
@@ -4353,7 +4353,8 @@ extern "C" {
             goto notifyError;
         }
 
-        if (packet != NULL && packet->referenceCount == 0) {
+        assert(packet != NULL);
+        if (packet->referenceCount == 0) {
             callbacks.packet_destroy(packet);
         }
 
