@@ -3133,12 +3133,12 @@ extern "C" {
                     currentPeer->packetsLost     = 0;
                 }
 
-                host->buffers->data = headerData;
+                host->buffers[0].data = headerData;
                 if (host->headerFlags & ENET_PROTOCOL_HEADER_FLAG_SENT_TIME) {
                     header->sentTime = ENET_HOST_TO_NET_16(host->serviceTime & 0xFFFF);
-                    host->buffers->dataLength = sizeof(ENetProtocolHeader);
+                    host->buffers[0].dataLength = sizeof(ENetProtocolHeader);
                 } else {
-                    host->buffers->dataLength = (size_t) &((ENetProtocolHeader *) 0)->sentTime;
+                    host->buffers[0].dataLength = (size_t) &((ENetProtocolHeader *) 0)->sentTime;
                 }
 
                 shouldCompress = 0;
@@ -3159,9 +3159,9 @@ extern "C" {
                 }
                 header->peerID = ENET_HOST_TO_NET_16(currentPeer->outgoingPeerID | host->headerFlags);
                 if (host->checksum != NULL) {
-                    enet_uint32 *checksum = (enet_uint32 *) &headerData[host->buffers->dataLength];
+                    enet_uint32 *checksum = (enet_uint32 *) &headerData[host->buffers[0].dataLength];
                     *checksum = currentPeer->outgoingPeerID < ENET_PROTOCOL_MAXIMUM_PEER_ID ? currentPeer->connectID : 0;
-                    host->buffers->dataLength += sizeof(enet_uint32);
+                    host->buffers[0].dataLength += sizeof(enet_uint32);
                     *checksum = host->checksum(host->buffers, host->bufferCount);
                 }
 
