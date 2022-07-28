@@ -4438,7 +4438,7 @@ extern "C" {
             channelLimit = ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT;
         }
 
-        host->randomSeed                    = (enet_uint32) (size_t) host;
+        host->randomSeed                    = (enet_uint32) ((uintptr_t) host % UINT32_MAX);
         host->randomSeed                    += enet_host_random_seed();
         host->randomSeed                    = (host->randomSeed << 16) | (host->randomSeed >> 16);
         host->channelLimit                  = channelLimit;
