@@ -3176,6 +3176,9 @@ extern "C" {
                 enet_protocol_remove_sent_unreliable_commands(currentPeer);
 
                 if (sentLength < 0) {
+                    // The local 'headerData' array (to which 'data' is assigned) goes out
+                    // of scope on return from this function, so ensure we no longer point to it.
+                    host->buffers[0].data = NULL;
                     return -1;
                 }
 
@@ -3183,6 +3186,10 @@ extern "C" {
                 currentPeer->totalDataSent += sentLength;
                 host->totalSentPackets++;
             }
+
+        // The local 'headerData' array (to which 'data' is assigned) goes out
+        // of scope on return from this function, so ensure we no longer point to it.
+        host->buffers[0].data = NULL;
 
         return 0;
     } /* enet_protocol_send_outgoing_commands */
