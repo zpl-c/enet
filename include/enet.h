@@ -4437,8 +4437,6 @@ extern "C" {
 
         if (!channelLimit || channelLimit > ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT) {
             channelLimit = ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT;
-        } else if (channelLimit < ENET_PROTOCOL_MINIMUM_CHANNEL_COUNT) {
-            channelLimit = ENET_PROTOCOL_MINIMUM_CHANNEL_COUNT;
         }
 
         host->randomSeed                    = (enet_uint32) (size_t) host;
@@ -4690,10 +4688,7 @@ extern "C" {
     void enet_host_channel_limit(ENetHost *host, size_t channelLimit) {
         if (!channelLimit || channelLimit > ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT) {
             channelLimit = ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT;
-        } else if (channelLimit < ENET_PROTOCOL_MINIMUM_CHANNEL_COUNT) {
-            channelLimit = ENET_PROTOCOL_MINIMUM_CHANNEL_COUNT;
         }
-
         host->channelLimit = channelLimit;
     }
 
