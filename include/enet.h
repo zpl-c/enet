@@ -5037,10 +5037,7 @@ extern "C" {
         }
 
         if (getaddrinfo(name, NULL, &hints, &resultList) != 0) {
-            if (resultList != NULL) {
-                freeaddrinfo(resultList);
-            }
-
+            freeaddrinfo(resultList);
             return -1;
         }
 
@@ -5049,29 +5046,18 @@ extern "C" {
                 if (result->ai_family == AF_INET || (result->ai_family == AF_UNSPEC && result->ai_addrlen == sizeof(struct sockaddr_in))) {
                     enet_inaddr_map4to6(((struct sockaddr_in*)result->ai_addr)->sin_addr, &out->host);
                     out->sin6_scope_id = 0;
-
-                    if (resultList != NULL) {
-                        freeaddrinfo(resultList);
-                    }
-
+                    freeaddrinfo(resultList);
                     return 0;
+
                 } else if (result->ai_family == AF_INET6 || (result->ai_family == AF_UNSPEC && result->ai_addrlen == sizeof(struct sockaddr_in6))) {
                     memcpy(&out->host, &((struct sockaddr_in6*)result->ai_addr)->sin6_addr, sizeof(struct in6_addr));
                     out->sin6_scope_id = (enet_uint16) ((struct sockaddr_in6*)result->ai_addr)->sin6_scope_id;
-
-                    if (resultList != NULL) {
-                        freeaddrinfo(resultList);
-                    }
-
+                    freeaddrinfo(resultList);
                     return 0;
                 }
             }
         }
-
-        if (resultList != NULL) {
-            freeaddrinfo(resultList);
-        }
-
+        freeaddrinfo(resultList);
         return -1;
     }
 
@@ -5356,7 +5342,6 @@ extern "C" {
                     ((uint32_t *)&address->host.s6_addr)[3] = sin->sin_addr.s_addr;
 
                     freeaddrinfo(resultList);
-
                     return 0;
                 }
                 else if(result->ai_family == AF_INET6) {
@@ -5366,16 +5351,11 @@ extern "C" {
                     address->sin6_scope_id = sin->sin6_scope_id;
 
                     freeaddrinfo(resultList);
-
                     return 0;
                 }
             }
         }
-
-
-        if (resultList != NULL) {
-            freeaddrinfo(resultList);
-        }
+        freeaddrinfo(resultList);
 
         return enet_address_set_host_ip(address, name);
     } /* enet_address_set_host_old */
