@@ -39,7 +39,7 @@ jobs:
       - name: Run Windows build
         run: cmake --build build
       - name: Run unit tests
-        run: cd build ; .\enet_test.exe
+        run: cd build ; .\Release\enet_test.exe
 
   build-lin:
     name: Test Linux
