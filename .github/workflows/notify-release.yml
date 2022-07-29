@@ -30,12 +30,12 @@ jobs:
       - name: Run Windows build
         run: cmake --build build --config Release
       - name: Run unit tests
-        run: cd build ; .\Release\enet_test.exe
+        run: cd build ; .\enet_test.exe
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: build/Release/enet.dll
+          files: build/enet_shared.dll
 
   build-lin:
     name: Test Linux
@@ -43,16 +43,16 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Run cmake generator
-        run: cmake -B build -DENET_TEST=1 -DENET_SHARED=1
+        run: cmake -B build -DENET_TEST=1 -DENET_SHARED=1 -DCMAKE_BUILD_TYPE=Release
       - name: Run build on Linux
-        run: cmake --build build --config Release
+        run: cmake --build build
       - name: Test build on Linux
-        run: build/Release/enet_test
+        run: build/enet_test
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: build/Release/libenet.so
+          files: build/libenet_shared.so
 
   build-mac:
     name: Test macOS
@@ -60,13 +60,13 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Run cmake generator
-        run: cmake -B build -DENET_TEST=1 -DENET_SHARED=1
+        run: cmake -B build -DENET_TEST=1 -DENET_SHARED=1 -DCMAKE_BUILD_TYPE=Release
       - name: Run build on macOS
-        run: cmake --build build --config Release
+        run: cmake --build build
       - name: Test build on macOS
-        run: build/Release/enet_test
+        run: build/enet_test
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: build/Release/libenet.dylib
+          files: build/libenet_shared.dylib

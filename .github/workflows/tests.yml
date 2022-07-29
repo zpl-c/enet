@@ -35,11 +35,11 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Run cmake generator
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DENET_TEST=1 -DENET_SHARED=1
+        run: cmake -B build -DENET_TEST=1
       - name: Run Windows build
         run: cmake --build build
       - name: Run unit tests
-        run: cd build ; .\Release\enet_test.exe
+        run: cd build ; .\enet_test.exe
 
   build-lin:
     name: Test Linux
@@ -48,11 +48,11 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Run cmake generator
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DENET_TEST=1 -DENET_SHARED=1
+        run: cmake -B build -DENET_TEST=1
       - name: Run build on Linux
         run: cmake --build build
       - name: Test build on Linux
-        run: build/Release/enet_test
+        run: build/enet_test
 
   build-mac:
     name: Test macOS
@@ -61,11 +61,11 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Run cmake generator
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DENET_TEST=1 -DENET_SHARED=1
+        run: cmake -B build -DENET_TEST=1
       - name: Run build on macOS
         run: cmake --build build
       - name: Test build on macOS
-        run: build/Release/enet_test
+        run: build/enet_test
 
   done:
     name: Notify about status
