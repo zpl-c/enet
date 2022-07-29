@@ -35,7 +35,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: build/enet_shared.dll
+          files: build/Release/enet_shared.dll
 
   build-lin:
     name: Test Linux
