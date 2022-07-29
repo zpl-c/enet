@@ -26,9 +26,9 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Run cmake generator
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DENET_TEST=1 -DENET_SHARED=1
+        run: cmake -B build -DENET_TEST=1 -DENET_SHARED=1
       - name: Run Windows build
-        run: cmake --build build
+        run: cmake --build build --config Release
       - name: Run unit tests
         run: cd build ; .\Release\enet_test.exe
       - name: Release
@@ -43,9 +43,9 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Run cmake generator
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DENET_TEST=1 -DENET_SHARED=1
+        run: cmake -B build -DENET_TEST=1 -DENET_SHARED=1
       - name: Run build on Linux
-        run: cmake --build build
+        run: cmake --build build --config Release
       - name: Test build on Linux
         run: build/Release/enet_test
       - name: Release
@@ -60,9 +60,9 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Run cmake generator
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DENET_TEST=1 -DENET_SHARED=1
+        run: cmake -B build -DENET_TEST=1 -DENET_SHARED=1
       - name: Run build on macOS
-        run: cmake --build build
+        run: cmake --build build --config Release
       - name: Test build on macOS
         run: build/Release/enet_test
       - name: Release
