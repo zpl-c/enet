@@ -1,3 +1,22 @@
-build/
+# Folders
+build/*
+misc/deploy/
 node_modules/
+pkg/
+
+# vs shit
+*.dir/
+x64/
+
+# Other
 .DS_store
+
+# local build scripts
+build.sh
+build.bat
+package-lock.json
+
+# gtags
+GPATH
+GRTAGS
+GTAGS

@@ -6,9 +6,6 @@
   "directories": {
     "doc": "misc/docs"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zpl-c/enet-c.git"
@@ -30,5 +27,31 @@
     "url": "https://github.com/zpl-c/enet-c/issues"
   },
   "homepage": "https://github.com/zpl-c/enet-c#readme",
-  "dependencies": {}
+  "scripts": {
+    "embed": "node -e 'require(\"./misc/packager\").embedIncludes()'",
+    "release": "release-it",
+    "release-patch": "release-it patch --ci",
+    "release-minor": "release-it minor --ci",
+    "release-major": "release-it major --ci",
+    "release-patch-pre": "release-it patch --preRelease=pre --ci",
+    "release-minor-pre": "release-it minor --preRelease=pre --ci",
+    "release-major-pre": "release-it major --preRelease=pre --ci"
+  },
+  "devDependencies": {
+    "release-it": "^13.6.1"
+  },
+  "release-it": {
+    "npm": {
+      "publish": true
+    },
+    "github": {
+      "release": true,
+      "assets": [
+        "misc/deploy/enet.h"
+      ]
+    },
+    "plugins": {
+      "./misc/packager.js": {}
+    }
+  }
 }

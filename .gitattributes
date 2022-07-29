@@ -1,0 +1,2 @@
+*.h linguist-language=C
+code/vendor/* linguist-vendored
