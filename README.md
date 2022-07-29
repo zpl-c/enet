@@ -1,18 +1,17 @@
 <div align="center">
-    <a href="https://github.com/zpl-c/enet"><img src="https://user-images.githubusercontent.com/2182108/33219675-6150f8a8-d14c-11e7-9081-a9be1945bfb1.png" alt="ENet" /></a>
+    <a href="https://github.com/zpl-c/enet"><img src="https://user-images.githubusercontent.com/2182108/111983468-d5593e80-8b12-11eb-9c59-8c78ecc0504e.png" alt="zpl/enet" /></a>
 </div>
 
-<br>
+<br />
 
 <div align="center">
-    <a href="https://travis-ci.org/zpl-c/enet"><img src="https://travis-ci.org/zpl-c/enet.svg" alt="Build status" /></a>
-    <a href="https://ci.appveyor.com/project/inlife/enet"><img src="https://ci.appveyor.com/api/projects/status/0mkwad2yljdlq3c6?svg=true" alt="Build status" /></a>
-    <a href="https://www.npmjs.com/package/enet.c"><img src="https://img.shields.io/npm/v/enet.c.svg?maxAge=3600" alt="NPM version" /></a>
-    <a href="https://discord.gg/2fZVEym"><img src="https://discordapp.com/api/guilds/354670964400848898/embed.png" alt="Discord server" /></a>
-    <a href="LICENSE"><img src="https://img.shields.io/github/license/zpl-c/enet.svg" alt="license" /></a>
+    <a href="https://github.com/zpl-c/enet/actions"><img src="https://img.shields.io/github/workflow/status/zpl-c/enet/tests?label=Tests&style=for-the-badge" alt="build status" /></a>
+    <img src="https://img.shields.io/github/package-json/v/zpl-c/enet?style=for-the-badge" alt="version" /></a>
+    <a href="https://discord.gg/2fZVEym"><img src="https://img.shields.io/discord/354670964400848898?color=7289DA&style=for-the-badge" alt="discord" /></a>
+    <a href="LICENSE"><img src="https://img.shields.io/github/license/zpl-c/enet?style=for-the-badge" alt="license" /></a>
 </div>
 
-<br style="line-height: 10px" />
+<br />
 
 <div align="center">
   ENet - Simple, lightweight and reliable UDP networking library written on pure C
@@ -20,16 +19,14 @@
 
 <div align="center">
   <sub>
-    Brought to you by
+    Brought to you by 
     <a href="https://github.com/lsalzman">@lsalzman</a>,
     <a href="https://github.com/inlife">@inlife</a>,
     <a href="https://github.com/zaklaus">@zaklaus</a>,
     <a href="https://github.com/nxrighthere">@nxrighthere</a>
-    and other contributors!
+    and other <a href="https://github.com/zpl-c/librg/graphs/contributors">contributors</a>
   </sub>
 </div>
-
-<hr/>
 
 ## Disclaimer
 
@@ -41,8 +38,7 @@ we are trying to change some things, things, which can't be reflected on the mai
 * applied project-wide code style change
 * cleaned up project
 * single-header style code
-* NPM package distribution
-* removed a lot of older methods
+* removed some of older/outdated methods
 * and many other various changes
 
 ## Description
@@ -55,29 +51,17 @@ ENet omits certain higher level networking features such as authentication, lobb
 server discovery, encryption, or other similar tasks that are particularly application
 specific so that the library remains flexible, portable, and easily embeddable.
 
-## Installation (via npm)
+## Installation
 
-Install library using (omit `--save` if you don't have npm project initilized)
-
-```sh
-$ npm install enet.c --save
-```
-
-Add include path to the library `node_modules/enet.c/include` to your makefile/
-
-## Installation (manually)
-
-Download file [include/enet.h](https://raw.githubusercontent.com/zpl-c/enet/master/include/enet.h) and just add to your project.
+Download file [releases/latest/enet.h](https://github.com/zpl-c/enet/releases/latest/download/enet.h) and just add to your project.
 
 ## Usage (Shared library)
 
 Build the shared library:
 
 ```sh
-$ mkdir build
-$ cd build
-$ cmake .. -DENET_SHARED=1 -DCMAKE_BUILD_TYPE=Release
-$ cmake --build .
+$ cmake -B build -DENET_SHARED=1 -DCMAKE_BUILD_TYPE=Release
+$ cmake --build build
 ```
 
 Use it:
@@ -103,10 +87,8 @@ int main() {
 Build the static library:
 
 ```sh
-$ mkdir build
-$ cd build
-$ cmake .. -DENET_STATIC=1 -DCMAKE_BUILD_TYPE=Release
-$ cmake --build .
+$ cmake -B build -DENET_STATIC=1 -DCMAKE_BUILD_TYPE=Release
+$ cmake --build build
 ```
 
 Use it:
@@ -126,7 +108,7 @@ int main() {
 }
 ```
 
-## Usage (Direct, Preferred)
+## Usage (Single Header, Preferred)
 
 In this case, library will be embedded to the project itself.
 
