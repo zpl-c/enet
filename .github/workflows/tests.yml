@@ -25,6 +25,8 @@ jobs:
       - uses: inlife/actiord-action@v1
         with:
           url: ${{ secrets.ACTIORD_URL }}
+          discord_token: ${{ secrets.DISCORD_TOKEN }}
+          discord_channel: ${{ secrets.DISCORD_CHANNEL }}
           icon: https://avatars1.githubusercontent.com/u/26773913?s=200&v=4
           state: started
 
