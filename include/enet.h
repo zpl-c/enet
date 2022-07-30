@@ -84,9 +84,9 @@
     #endif
 
     #ifdef __GNUC__
-    #if (_WIN32_WINNT < 0x0501)
+    #if (_WIN32_WINNT < 0x0600)
     #undef _WIN32_WINNT
-    #define _WIN32_WINNT 0x0501
+    #define _WIN32_WINNT 0x0600
     #endif
     #endif
 
@@ -5088,7 +5088,7 @@ extern "C" {
             }
         }
         else {
-            if (inet_ntop(AF_INET6, &address->host, name, nameLength) == NULL) {
+            if (inet_ntop(AF_INET6, (void*)&address->host, name, nameLength) == NULL) {
                 return -1;
             }
         }
