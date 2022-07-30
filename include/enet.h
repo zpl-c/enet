@@ -43,7 +43,7 @@
 
 #define ENET_VERSION_MAJOR 2
 #define ENET_VERSION_MINOR 3
-#define ENET_VERSION_PATCH 2
+#define ENET_VERSION_PATCH 3
 #define ENET_VERSION_CREATE(major, minor, patch) (((major)<<16) | ((minor)<<8) | (patch))
 #define ENET_VERSION_GET_MAJOR(version) (((version)>>16)&0xFF)
 #define ENET_VERSION_GET_MINOR(version) (((version)>>8)&0xFF)
@@ -3859,7 +3859,7 @@ extern "C" {
      *  @param pingInterval the interval at which to send pings; defaults to ENET_PEER_PING_INTERVAL if 0
      */
     void enet_peer_ping_interval(ENetPeer *peer, enet_uint32 pingInterval) {
-        peer->pingInterval = pingInterval ? pingInterval : ENET_PEER_PING_INTERVAL;
+        peer->pingInterval = pingInterval ? pingInterval : (enet_uint32)ENET_PEER_PING_INTERVAL;
     }
 
     /** Sets the timeout parameters for a peer.
@@ -3880,9 +3880,9 @@ extern "C" {
      */
 
     void enet_peer_timeout(ENetPeer *peer, enet_uint32 timeoutLimit, enet_uint32 timeoutMinimum, enet_uint32 timeoutMaximum) {
-        peer->timeoutLimit   = timeoutLimit ? timeoutLimit : ENET_PEER_TIMEOUT_LIMIT;
-        peer->timeoutMinimum = timeoutMinimum ? timeoutMinimum : ENET_PEER_TIMEOUT_MINIMUM;
-        peer->timeoutMaximum = timeoutMaximum ? timeoutMaximum : ENET_PEER_TIMEOUT_MAXIMUM;
+        peer->timeoutLimit   = timeoutLimit ? timeoutLimit : (enet_uint32)ENET_PEER_TIMEOUT_LIMIT;
+        peer->timeoutMinimum = timeoutMinimum ? timeoutMinimum : (enet_uint32)ENET_PEER_TIMEOUT_MINIMUM;
+        peer->timeoutMaximum = timeoutMaximum ? timeoutMaximum : (enet_uint32)ENET_PEER_TIMEOUT_MAXIMUM;
     }
 
     /** Force an immediate disconnection from a peer.
@@ -4904,8 +4904,7 @@ extern "C" {
             t.QuadPart |= f.dwLowDateTime;
             return (t);
         }
-
-        int clock_gettime(int X, struct timespec *tv) {
+        int clock_gettime(int /* X */, struct timespec *tv) {
             LARGE_INTEGER t;
             FILETIME f;
             double microseconds;
