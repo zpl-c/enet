@@ -2641,7 +2641,8 @@ extern "C" {
                     goto commandError;
             }
 
-            if (peer != NULL && (command->header.command & ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE) != 0) {
+            assert(peer);
+            if ((command->header.command & ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE) != 0) {
                 enet_uint16 sentTime;
 
                 if (!(flags & ENET_PROTOCOL_HEADER_FLAG_SENT_TIME)) {
