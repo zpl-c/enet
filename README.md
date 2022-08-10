@@ -22,7 +22,7 @@
     Brought to you by 
     <a href="https://github.com/lsalzman">@lsalzman</a>,
     <a href="https://github.com/inlife">@inlife</a>,
-    <a href="https://github.com/zaklaus">@zaklaus</a>,
+    <a href="https://github.com/zpl-zak">@zpl-zak</a>,
     <a href="https://github.com/nxrighthere">@nxrighthere</a>
     and other <a href="https://github.com/zpl-c/librg/graphs/contributors">contributors</a>
   </sub>
