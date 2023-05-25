@@ -72,8 +72,10 @@
     #endif
 
     #ifndef ENET_NO_PRAGMA_LINK
+    #ifndef  __GNUC__
     #pragma comment(lib, "ws2_32.lib")
     #pragma comment(lib, "winmm.lib")
+    #endif
     #endif
 
     #if _MSC_VER >= 1910
