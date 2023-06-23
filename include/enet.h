@@ -254,6 +254,7 @@ extern "C" {
     extern void *enet_malloc(size_t);
     extern void enet_free(void *);
     extern ENetPacket* enet_packet_create(const void*,size_t,enet_uint32);
+    extern int enet_packet_resize(ENetPacket*, size_t);
     extern ENetPacket* enet_packet_copy(ENetPacket*);
     extern void enet_packet_destroy(ENetPacket*);
 
@@ -1389,6 +1390,36 @@ extern "C" {
         packet->userData     = NULL;
 
         return packet;
+    }
+
+    /** Attempts to resize the data in the packet to length specified in the 
+        dataLength parameter 
+        @param packet packet to resize
+        @param dataLength new size for the packet data
+        @returns 0 on success, < 0 on failure
+    */
+    int enet_packet_resize(ENetPacket * packet, size_t dataLength)
+    {
+        enet_uint8 *newData = 0;
+
+        if (dataLength <= packet->dataLength || (packet->flags & ENET_PACKET_FLAG_NO_ALLOCATE))
+        {
+           packet->dataLength = dataLength;
+
+           return 0;
+        }
+
+        newData = (enet_uint8 *) enet_malloc(dataLength);
+        if (newData == NULL)
+          return -1;
+
+        memcpy(newData, packet->data, packet->dataLength);
+        enet_free(packet->data);
+        
+        packet->data = newData;
+        packet->dataLength = dataLength;
+
+        return 0;
     }
 
     ENetPacket *enet_packet_create_offset(const void *data, size_t dataLength, size_t dataOffset, enet_uint32 flags) {
