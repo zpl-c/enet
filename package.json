@@ -42,7 +42,7 @@
   },
   "release-it": {
     "npm": {
-      "publish": true
+      "publish": false
     },
     "github": {
       "release": true,
