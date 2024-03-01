@@ -29,11 +29,11 @@
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * software.
  *
  */
-#ifndef ENET_INCLUDE_H
-#define ENET_INCLUDE_H
+#ifndef enet_include_h
+#define enet_include_h
 
 #include <assert.h>
 #include <stdlib.h>
@@ -43,7 +43,7 @@
 
 #define ENET_VERSION_MAJOR 2
 #define ENET_VERSION_MINOR 3
-#define ENET_VERSION_PATCH 7
+#define ENET_VERSION_PATCH 6
 #define ENET_VERSION_CREATE(major, minor, patch) (((major)<<16) | ((minor)<<8) | (patch))
 #define ENET_VERSION_GET_MAJOR(version) (((version)>>16)&0xFF)
 #define ENET_VERSION_GET_MINOR(version) (((version)>>8)&0xFF)
@@ -1400,7 +1400,7 @@ extern "C" {
     */
     int enet_packet_resize(ENetPacket * packet, size_t dataLength)
     {
-        enet_uint8 *newData = 0;
+        ENetPacket *newPacket = NULL;
 
         if (dataLength <= packet->dataLength || (packet->flags & ENET_PACKET_FLAG_NO_ALLOCATE))
         {
@@ -1409,15 +1409,13 @@ extern "C" {
            return 0;
         }
 
-        newData = (enet_uint8 *) enet_malloc(dataLength);
-        if (newData == NULL)
+        newPacket = (ENetPacket *)enet_malloc(sizeof (ENetPacket) + dataLength);
+        if (newPacket == NULL)
           return -1;
 
-        memcpy(newData, packet->data, packet->dataLength);
-        enet_free(packet->data);
-
-        packet->data = newData;
-        packet->dataLength = dataLength;
+        memcpy(newPacket, packet, sizeof(ENetPacket) + packet->dataLength);
+        newPacket->data = (enet_uint8 *)newPacket + sizeof(ENetPacket);
+        enet_free(packet);
 
         return 0;
     }
