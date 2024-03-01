@@ -247,7 +247,7 @@ dispatching any events.
 
     /* Extend the packet so and append the string "foo", so it now */
     /* contains "packetfoo\0"                                      */
-    enet_packet_resize (packet, strlen ("packetfoo") + 1);
+    packet = enet_packet_resize (packet, strlen ("packetfoo") + 1);
     strcpy (& packet -> data [strlen ("packet")], "foo");
     
     /* Send the packet to the peer over channel id 0. */

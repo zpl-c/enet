@@ -254,7 +254,7 @@ extern "C" {
     extern void *enet_malloc(size_t);
     extern void enet_free(void *);
     extern ENetPacket* enet_packet_create(const void*,size_t,enet_uint32);
-    extern int enet_packet_resize(ENetPacket*, size_t);
+    extern ENetPacket* enet_packet_resize(ENetPacket*, size_t);
     extern ENetPacket* enet_packet_copy(ENetPacket*);
     extern void enet_packet_destroy(ENetPacket*);
 
@@ -1396,9 +1396,9 @@ extern "C" {
         dataLength parameter
         @param packet packet to resize
         @param dataLength new size for the packet data
-        @returns 0 on success, < 0 on failure
+        @returns new packet pointer on success, NULL on failure
     */
-    int enet_packet_resize(ENetPacket * packet, size_t dataLength)
+    ENetPacket* enet_packet_resize(ENetPacket * packet, size_t dataLength)
     {
         ENetPacket *newPacket = NULL;
 
@@ -1406,18 +1406,19 @@ extern "C" {
         {
            packet->dataLength = dataLength;
 
-           return 0;
+           return packet;
         }
 
         newPacket = (ENetPacket *)enet_malloc(sizeof (ENetPacket) + dataLength);
         if (newPacket == NULL)
-          return -1;
+          return NULL;
 
         memcpy(newPacket, packet, sizeof(ENetPacket) + packet->dataLength);
         newPacket->data = (enet_uint8 *)newPacket + sizeof(ENetPacket);
+        newPacket->dataLength = dataLength;
         enet_free(packet);
 
-        return 0;
+        return newPacket;
     }
 
     ENetPacket *enet_packet_create_offset(const void *data, size_t dataLength, size_t dataOffset, enet_uint32 flags) {
