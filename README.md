@@ -91,6 +91,23 @@ $ cmake -B build -DENET_STATIC=1 -DCMAKE_BUILD_TYPE=Release
 $ cmake --build build
 ```
 
+Or assuming you have enet cloned into `external_libraries` you can use this minimal `CMakeLists.txt` file
+
+```cmake
+cmake_minimum_required(VERSION 3.10)
+
+project(mwe_networking)
+
+add_executable(mwe_networking main.cpp)
+
+SET(ENET_STATIC ON CACHE BOOL "" FORCE)
+
+add_subdirectory(external_libraries/enet)
+include_directories(external_libraries/enet/include)
+
+target_link_libraries(mwe_networking enet_static)
+```
+
 Use it:
 
 ```c
@@ -114,7 +131,11 @@ In this case, library will be embedded to the project itself.
 
 Make sure you add a define for `ENET_IMPLEMENTATION` exactly in one source file before including the `enet.h`.
 
+## Client Server Demo
+
 Here is a simple server and client demo, it will wait 1 second for events, and then exit if none were found:
+
+*Note: here `enet` is being used through the single header include method.*
 
 Server:
 
