@@ -24,7 +24,7 @@
     <a href="https://github.com/inlife">@inlife</a>,
     <a href="https://github.com/zpl-zak">@zpl-zak</a>,
     <a href="https://github.com/nxrighthere">@nxrighthere</a>
-    and other <a href="https://github.com/zpl-c/librg/graphs/contributors">contributors</a>
+    and other <a href="https://github.com/zpl-c/enet/graphs/contributors">contributors</a>
   </sub>
 </div>
 
