@@ -9,14 +9,22 @@ typedef struct {
     ENetPeer *peer;
 } Client;
 
+#ifdef ENET_USE_MORE_PEERS
+#define MAX_CLIENTS 5000
+#else
+#define MAX_CLIENTS 32
+#endif
+
+unsigned long long counter = 0;
+
 void host_server(ENetHost *server) {
     ENetEvent event;
     while (enet_host_service(server, &event, 2) > 0) {
         switch (event.type) {
             case ENET_EVENT_TYPE_CONNECT:
-                printf("A new client connected from ::1:%u.\n", event.peer->address.port);
+                printf("A new peer with ID %u connected from ::1:%u.\n", event.peer->incomingPeerID , event.peer->address.port);
                 /* Store any relevant client information here. */
-                event.peer->data = "Client information";
+                event.peer->data = (void*)(counter++);
                 break;
             case ENET_EVENT_TYPE_RECEIVE:
                 printf("A packet of length %zu containing %s was received from %s on channel %u.\n",
@@ -30,7 +38,7 @@ void host_server(ENetHost *server) {
                 break;
 
             case ENET_EVENT_TYPE_DISCONNECT:
-                printf ("%s disconnected.\n", (char *)event.peer->data);
+                printf ("Peer with ID %u disconnected.\n", event.peer->incomingPeerID);
                 /* Reset the peer's client information. */
                 event.peer->data = NULL;
                 break;
@@ -50,8 +58,6 @@ int main() {
         printf("An error occurred while initializing ENet.\n");
         return 1;
     }
-
-    #define MAX_CLIENTS 32
 
     int i = 0;
     ENetHost *server;
@@ -81,6 +87,8 @@ int main() {
         }
     }
 
+    printf("running server...\n");
+
     // program will make N iterations, and then exit
     static int counter = 1000;
 
@@ -95,9 +103,12 @@ int main() {
         counter--;
     } while (counter > 0);
 
+    printf("stopping clients...\n");
+
     for (i = 0; i < MAX_CLIENTS; ++i) {
         enet_peer_disconnect_now(clients[i].peer, 0);
         enet_host_destroy(clients[i].host);
+        host_server(server);
     }
 
     host_server(server);

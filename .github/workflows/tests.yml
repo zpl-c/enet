@@ -41,6 +41,8 @@ jobs:
         run: cmake --build build
       - name: Run unit tests
         run: cd build ; .\Debug\enet_test.exe
+      - name: Run unit tests with extra peers
+        run: cd build ; .\Debug\enet_test_extra_peers.exe
 
   build-lin:
     name: Test Linux
@@ -54,6 +56,8 @@ jobs:
         run: cmake --build build
       - name: Test build on Linux
         run: build/enet_test
+      - name: Test build on Linux with extra peers
+        run: build/enet_test_extra_peers
 
   build-mac:
     name: Test macOS
@@ -67,6 +71,8 @@ jobs:
         run: cmake --build build
       - name: Test build on macOS
         run: build/enet_test
+      - name: Test build on macOS with extra peers
+        run: build/enet_test_extra_peers
 
   done:
     name: Notify about status
