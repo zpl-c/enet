@@ -42,7 +42,7 @@
 #include <time.h>
 
 #define ENET_VERSION_MAJOR 2
-#define ENET_VERSION_MINOR 4
+#define ENET_VERSION_MINOR 5
 #define ENET_VERSION_PATCH 0
 #define ENET_VERSION_CREATE(major, minor, patch) (((major)<<16) | ((minor)<<8) | (patch))
 #define ENET_VERSION_GET_MAJOR(version) (((version)>>16)&0xFF)
