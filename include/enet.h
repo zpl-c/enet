@@ -1928,7 +1928,7 @@ extern "C" {
             windowSize = ENET_PROTOCOL_MAXIMUM_WINDOW_SIZE;
         }
 
-        verifyCommand.header.command                            = ENET_PROTOCOL_COMMAND_VERIFY_CONNECT | ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
+        verifyCommand.header.command                            = (int)ENET_PROTOCOL_COMMAND_VERIFY_CONNECT | (int)ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
         verifyCommand.header.channelID                          = 0xFF;
         verifyCommand.verifyConnect.outgoingPeerID              = ENET_HOST_TO_NET_16(peer->incomingPeerID);
         verifyCommand.verifyConnect.incomingSessionID           = incomingSessionID;
@@ -3183,14 +3183,14 @@ extern "C" {
 
                     #ifdef ENET_DEBUG
                     printf(
-                        "peer %u: %f%%+-%f%% packet loss, %u+-%u ms round trip time, %f%% throttle, %u/%u outgoing, %u/%u incoming\n", currentPeer->incomingPeerID,
+                        "peer %u: %f%%+-%f%% packet loss, %u+-%u ms round trip time, %f%% throttle, %llu/%llu outgoing, %llu/%llu incoming\n", currentPeer->incomingPeerID,
                         currentPeer->packetLoss / (float) ENET_PEER_PACKET_LOSS_SCALE,
                         currentPeer->packetLossVariance / (float) ENET_PEER_PACKET_LOSS_SCALE, currentPeer->roundTripTime, currentPeer->roundTripTimeVariance,
                         currentPeer->packetThrottle / (float) ENET_PEER_PACKET_THROTTLE_SCALE,
                         enet_list_size(&currentPeer->outgoingReliableCommands),
                         enet_list_size(&currentPeer->outgoingUnreliableCommands),
-                        currentPeer->channels != NULL ? enet_list_size( &currentPeer->channels->incomingReliableCommands) : 0,
-                        currentPeer->channels != NULL ? enet_list_size(&currentPeer->channels->incomingUnreliableCommands) : 0
+                        currentPeer->channels != NULL ? enet_list_size( &currentPeer->channels->incomingReliableCommands) : 0llu,
+                        currentPeer->channels != NULL ? enet_list_size(&currentPeer->channels->incomingUnreliableCommands) : 0llu
                     );
                     #endif
 
@@ -3498,7 +3498,7 @@ extern "C" {
         peer->packetThrottleAcceleration = acceleration;
         peer->packetThrottleDeceleration = deceleration;
 
-        command.header.command   = ENET_PROTOCOL_COMMAND_THROTTLE_CONFIGURE | ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
+        command.header.command   = (int)ENET_PROTOCOL_COMMAND_THROTTLE_CONFIGURE | (int)ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
         command.header.channelID = 0xFF;
 
         command.throttleConfigure.packetThrottleInterval     = ENET_HOST_TO_NET_32(interval);
@@ -3717,11 +3717,11 @@ extern "C" {
         command.header.channelID = channelID;
 
         if ((packet->flags & (ENET_PACKET_FLAG_RELIABLE | ENET_PACKET_FLAG_UNSEQUENCED)) == ENET_PACKET_FLAG_UNSEQUENCED) {
-            command.header.command = ENET_PROTOCOL_COMMAND_SEND_UNSEQUENCED | ENET_PROTOCOL_COMMAND_FLAG_UNSEQUENCED;
+            command.header.command = (int)ENET_PROTOCOL_COMMAND_SEND_UNSEQUENCED | (int)ENET_PROTOCOL_COMMAND_FLAG_UNSEQUENCED;
             command.sendUnsequenced.dataLength = ENET_HOST_TO_NET_16(packet->dataLength);
         }
         else if (packet->flags & ENET_PACKET_FLAG_RELIABLE || channel->outgoingUnreliableSequenceNumber >= 0xFFFF) {
-            command.header.command = ENET_PROTOCOL_COMMAND_SEND_RELIABLE | ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
+            command.header.command = (int)ENET_PROTOCOL_COMMAND_SEND_RELIABLE | (int)ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
             command.sendReliable.dataLength = ENET_HOST_TO_NET_16(packet->dataLength);
         }
         else {
@@ -3943,7 +3943,7 @@ extern "C" {
             return;
         }
 
-        command.header.command   = ENET_PROTOCOL_COMMAND_PING | ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
+        command.header.command   = (int)ENET_PROTOCOL_COMMAND_PING | (int)ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
         command.header.channelID = 0xFF;
 
         enet_peer_queue_outgoing_command(peer, &command, NULL, 0, 0);
@@ -4002,7 +4002,7 @@ extern "C" {
         if (peer->state != ENET_PEER_STATE_ZOMBIE && peer->state != ENET_PEER_STATE_DISCONNECTING) {
             enet_peer_reset_queues(peer);
 
-            command.header.command   = ENET_PROTOCOL_COMMAND_DISCONNECT | ENET_PROTOCOL_COMMAND_FLAG_UNSEQUENCED;
+            command.header.command   = (int)ENET_PROTOCOL_COMMAND_DISCONNECT | (int)ENET_PROTOCOL_COMMAND_FLAG_UNSEQUENCED;
             command.header.channelID = 0xFF;
             command.disconnect.data  = ENET_HOST_TO_NET_32(data);
 
@@ -4688,7 +4688,7 @@ extern "C" {
             memset(channel->reliableWindows, 0, sizeof(channel->reliableWindows));
         }
 
-        command.header.command                     = ENET_PROTOCOL_COMMAND_CONNECT | ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
+        command.header.command                     = (int)ENET_PROTOCOL_COMMAND_CONNECT | (int)ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
         command.header.channelID                   = 0xFF;
         command.connect.outgoingPeerID             = ENET_HOST_TO_NET_16(currentPeer->incomingPeerID);
         command.connect.incomingSessionID          = currentPeer->incomingSessionID;
@@ -4963,7 +4963,7 @@ extern "C" {
                     continue;
                 }
 
-                command.header.command   = ENET_PROTOCOL_COMMAND_BANDWIDTH_LIMIT | ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
+                command.header.command   = (int)ENET_PROTOCOL_COMMAND_BANDWIDTH_LIMIT | (int)ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE;
                 command.header.channelID = 0xFF;
                 command.bandwidthLimit.outgoingBandwidth = ENET_HOST_TO_NET_32(host->outgoingBandwidth);
 
@@ -5100,7 +5100,14 @@ extern "C" {
             // Set the value of the start_time_ns, such that the first timestamp
             // is at 1ms. This ensures 0 remains a special value.
             uint64_t want_value = current_time_ns - 1 * ns_in_ms;
+            #if defined(__GNUC__) // Ignore warning.
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wpedantic"
+            #endif
             uint64_t old_value = ENET_ATOMIC_CAS(&start_time_ns, 0, want_value);
+            #if defined(__GNUC__)
+            #pragma GCC diagnostic pop
+            #endif
             offset_ns = old_value == 0 ? want_value : old_value;
         }
 
