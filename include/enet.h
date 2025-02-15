@@ -1418,8 +1418,6 @@ extern "C" {
     */
     ENetPacket* enet_packet_resize(ENetPacket * packet, size_t dataLength)
     {
-        ENetPacket *newPacket = NULL;
-
         if (dataLength <= packet->dataLength || (packet->flags & ENET_PACKET_FLAG_NO_ALLOCATE))
         {
            packet->dataLength = dataLength;
@@ -1427,7 +1425,7 @@ extern "C" {
            return packet;
         }
 
-        newPacket = (ENetPacket *)enet_malloc(sizeof (ENetPacket) + dataLength);
+        ENetPacket *newPacket = (ENetPacket *)enet_malloc(sizeof (ENetPacket) + dataLength);
         if (newPacket == NULL)
           return NULL;
 
