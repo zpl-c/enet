@@ -1306,7 +1306,7 @@ extern "C" {
 
     void enet_free(void *memory) {
         callbacks.free(memory);
-        memory = nullptr;
+        memory = NULL;
     }
 
 // =======================================================================//
