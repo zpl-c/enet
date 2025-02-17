@@ -2964,11 +2964,11 @@ extern "C" {
     static int enet_protocol_check_outgoing_commands(ENetHost *host, ENetPeer *peer, ENetList *sentUnreliableCommands) {
         ENetProtocol *command = &host->commands[host->commandCount];
         ENetBuffer *buffer    = &host->buffers[host->bufferCount];
-        ENetOutgoingCommand *outgoingCommand;
+        ENetOutgoingCommand *outgoingCommand = NULL;
         ENetListIterator currentCommand, currentSendReliableCommand;
-        ENetChannel *channel;
-        enet_uint16 reliableWindow;
-        size_t commandSize;
+        ENetChannel *channel = NULL;
+        enet_uint16 reliableWindow = 0;
+        size_t commandSize=0;
         int windowWrap = 0, canPing = 1;
 
         currentCommand = enet_list_begin(&peer->outgoingCommands);
@@ -3034,6 +3034,8 @@ extern "C" {
             }
 
             if (outgoingCommand->command.header.command & ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE) {
+                channel = outgoingCommand->command.header.channelID < peer->channelCount ? & peer->channels [outgoingCommand->command.header.channelID] : NULL;
+                reliableWindow = outgoingCommand->reliableSequenceNumber / ENET_PEER_RELIABLE_WINDOW_SIZE;
                 if (channel != NULL && outgoingCommand->sendAttempts < 1) {
                     channel->usedReliableWindows |= 1u << reliableWindow;
                     ++channel->reliableWindows[reliableWindow];
