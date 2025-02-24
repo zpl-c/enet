@@ -5856,7 +5856,7 @@ extern "C" {
 
     int enet_initialize(void) {
         WORD versionRequested = MAKEWORD(1, 1);
-        WSADATA wsaData;
+        WSADATA wsaData = {0};
 
         if (WSAStartup(versionRequested, &wsaData)) {
             return -1;
@@ -5950,8 +5950,7 @@ extern "C" {
     }
 
     int enet_socket_bind(ENetSocket socket, const ENetAddress *address) {
-        struct sockaddr_in6 sin;
-        memset(&sin, 0, sizeof(struct sockaddr_in6));
+        struct sockaddr_in6 sin = {0};
         sin.sin6_family = AF_INET6;
 
         if (address != NULL) {
@@ -5968,7 +5967,7 @@ extern "C" {
     }
 
     int enet_socket_get_address(ENetSocket socket, ENetAddress *address) {
-        struct sockaddr_in6 sin;
+        struct sockaddr_in6 sin = {0};
         int sinLength = sizeof(struct sockaddr_in6);
 
         if (getsockname(socket, (struct sockaddr *) &sin, &sinLength) == -1) {
@@ -6063,10 +6062,8 @@ extern "C" {
     }
 
     int enet_socket_connect(ENetSocket socket, const ENetAddress *address) {
-        struct sockaddr_in6 sin;
+        struct sockaddr_in6 sin = {0};
         int result;
-
-        memset(&sin, 0, sizeof(struct sockaddr_in6));
 
         sin.sin6_family     = AF_INET6;
         sin.sin6_port       = ENET_HOST_TO_NET_16(address->port);
@@ -6083,7 +6080,7 @@ extern "C" {
 
     ENetSocket enet_socket_accept(ENetSocket socket, ENetAddress *address) {
         SOCKET result;
-        struct sockaddr_in6 sin;
+        struct sockaddr_in6 sin = {0};
         int sinLength = sizeof(struct sockaddr_in6);
 
         result = accept(socket, address != NULL ? (struct sockaddr *)&sin : NULL, address != NULL ? &sinLength : NULL);
@@ -6112,12 +6109,10 @@ extern "C" {
     }
 
     int enet_socket_send(ENetSocket socket, const ENetAddress *address, const ENetBuffer *buffers, size_t bufferCount) {
-        struct sockaddr_in6 sin;
+        struct sockaddr_in6 sin = {0};
         DWORD sentLength = 0;
 
         if (address != NULL) {
-            memset(&sin, 0, sizeof(struct sockaddr_in6));
-
             sin.sin6_family     = AF_INET6;
             sin.sin6_port       = ENET_HOST_TO_NET_16(address->port);
             sin.sin6_addr       = address->host;
@@ -6143,7 +6138,7 @@ extern "C" {
     int enet_socket_receive(ENetSocket socket, ENetAddress *address, ENetBuffer *buffers, size_t bufferCount) {
         INT sinLength = sizeof(struct sockaddr_in6);
         DWORD flags   = 0, recvLength = 0;
-        struct sockaddr_in6 sin;
+        struct sockaddr_in6 sin = {0};
 
         if (WSARecvFrom(socket,
             (LPWSABUF) buffers,
