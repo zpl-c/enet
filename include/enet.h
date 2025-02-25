@@ -824,6 +824,7 @@ extern "C" {
         size_t                duplicatePeers;     /**< optional number of allowed peers from duplicate IPs, defaults to ENET_PROTOCOL_MAXIMUM_PEER_ID */
         size_t                maximumPacketSize;  /**< the maximum allowable packet size that may be sent or received on a peer */
         size_t                maximumWaitingData; /**< the maximum aggregate amount of buffer space a peer may use waiting for packets to be delivered */
+        bool                  ownsSocket;         /**< Whether it use internally managed socket or custom network implementation */
     } ENetHost;
 
     /**
@@ -1011,7 +1012,7 @@ extern "C" {
     ENET_API ENetPacket * enet_packet_create_offset(const void *, size_t, size_t, enet_uint32);
     ENET_API enet_uint32  enet_crc32(const ENetBuffer *, size_t);
 
-    ENET_API ENetHost * enet_host_create(const ENetAddress *, size_t, size_t, enet_uint32, enet_uint32);
+    ENET_API ENetHost * enet_host_create(const ENetAddress *, size_t, size_t, enet_uint32, enet_uint32, ENetSocket* externalUDPSocket);
     ENET_API void       enet_host_destroy(ENetHost *);
     ENET_API ENetPeer * enet_host_connect(ENetHost *, const ENetAddress *, size_t, enet_uint32);
     ENET_API int        enet_host_check_events(ENetHost *, ENetEvent *);
@@ -4515,6 +4516,23 @@ extern "C" {
 // !
 // =======================================================================//
 
+    int is_udp_socket(const ENetSocket* socket) {
+        #ifdef _WIN32
+            WSAPROTOCOL_INFO info;
+            int len = sizeof(info);
+            if (getsockopt(*socket, SOL_SOCKET, SO_PROTOCOL_INFO, (char*)&info, &len) == 0) {
+                return (info.iSocketType == SOCK_DGRAM);
+            }
+        #else
+            int type;
+            socklen_t len = sizeof(type);
+            if (getsockopt(socket, SOL_SOCKET, SO_TYPE, &type, &len) == 0) {
+                return (type == SOCK_DGRAM);
+            }
+        #endif
+            return 0; /* Error: Could not determine socket type */
+    }
+
     /** Creates a host for communicating to peers.
      *
      *  @param address   the address at which other peers may connect to this host.  If NULL, then no peers may connect to the host.
@@ -4530,7 +4548,7 @@ extern "C" {
      *  the window size of a connection which limits the amount of reliable packets that may be in transit
      *  at any given time.
      */
-    ENetHost * enet_host_create(const ENetAddress *address, size_t peerCount, size_t channelLimit, enet_uint32 incomingBandwidth, enet_uint32 outgoingBandwidth) {
+    ENetHost * enet_host_create(const ENetAddress *address, size_t peerCount, size_t channelLimit, enet_uint32 incomingBandwidth, enet_uint32 outgoingBandwidth, ENetSocket* externalUDPSocket) {
         ENetHost *host;
         ENetPeer *currentPeer;
 
@@ -4550,27 +4568,33 @@ extern "C" {
 
         memset(host->peers, 0, peerCount * sizeof(ENetPeer));
 
-        host->socket = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
-        if (host->socket != ENET_SOCKET_NULL) {
-            enet_socket_set_option (host->socket, ENET_SOCKOPT_IPV6_V6ONLY, 0);
-        }
-
-        if (host->socket == ENET_SOCKET_NULL || (address != NULL && enet_socket_bind(host->socket, address) < 0)) {
+        if (externalUDPSocket==NULL || !is_udp_socket(externalUDPSocket)){
+            host->socket = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
             if (host->socket != ENET_SOCKET_NULL) {
-                enet_socket_destroy(host->socket);
+                enet_socket_set_option (host->socket, ENET_SOCKOPT_IPV6_V6ONLY, 0);
             }
-
-            enet_free(host->peers);
-            enet_free(host);
-
-            return NULL;
+    
+            if (host->socket == ENET_SOCKET_NULL || (address != NULL && enet_socket_bind(host->socket, address) < 0)) {
+                if (host->socket != ENET_SOCKET_NULL) {
+                    enet_socket_destroy(host->socket);
+                }
+    
+                enet_free(host->peers);
+                enet_free(host);
+    
+                return NULL;
+            }
+    
+            enet_socket_set_option(host->socket, ENET_SOCKOPT_NONBLOCK, 1);
+            enet_socket_set_option(host->socket, ENET_SOCKOPT_BROADCAST, 1);
+            enet_socket_set_option(host->socket, ENET_SOCKOPT_RCVBUF, ENET_HOST_RECEIVE_BUFFER_SIZE);
+            enet_socket_set_option(host->socket, ENET_SOCKOPT_SNDBUF, ENET_HOST_SEND_BUFFER_SIZE);
+            enet_socket_set_option(host->socket, ENET_SOCKOPT_IPV6_V6ONLY, 0);
+            host->ownsSocket = true;
+        }else{
+            host->socket = *externalUDPSocket;
+            host->ownsSocket = false;
         }
-
-        enet_socket_set_option(host->socket, ENET_SOCKOPT_NONBLOCK, 1);
-        enet_socket_set_option(host->socket, ENET_SOCKOPT_BROADCAST, 1);
-        enet_socket_set_option(host->socket, ENET_SOCKOPT_RCVBUF, ENET_HOST_RECEIVE_BUFFER_SIZE);
-        enet_socket_set_option(host->socket, ENET_SOCKOPT_SNDBUF, ENET_HOST_SEND_BUFFER_SIZE);
-        enet_socket_set_option(host->socket, ENET_SOCKOPT_IPV6_V6ONLY, 0);
 
         if (address != NULL && enet_socket_get_address(host->socket, &host->address) < 0) {
             host->address = *address;
@@ -4643,7 +4667,9 @@ extern "C" {
             return;
         }
 
-        enet_socket_destroy(host->socket);
+        if (host->ownsSocket){ /* Only destroy if it's internally managed. */
+            enet_socket_destroy(host->socket);
+        }
 
         for (currentPeer = host->peers; currentPeer < &host->peers[host->peerCount]; ++currentPeer) {
             enet_peer_reset(currentPeer);
