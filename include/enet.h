@@ -56,6 +56,7 @@
 #define ENET_TIME_LESS_EQUAL(a, b) (! ENET_TIME_GREATER (a, b))
 #define ENET_TIME_GREATER_EQUAL(a, b) (! ENET_TIME_LESS (a, b))
 #define ENET_TIME_DIFFERENCE(a, b) ((a) - (b) >= ENET_TIME_OVERFLOW ? (b) - (a) : (a) - (b))
+#define ENET_TEST_1 0
 
 // =======================================================================//
 // !
@@ -2997,11 +2998,11 @@ extern "C" {
                 if (channel != NULL) {
                     if (windowWrap) {
                         continue;
-                    } else if (outgoingCommand->sendAttempts < 1 && 
+                    } else if (outgoingCommand->sendAttempts < 1 &&
                             !(outgoingCommand->reliableSequenceNumber % ENET_PEER_RELIABLE_WINDOW_SIZE) &&
                             (channel->reliableWindows [(reliableWindow + ENET_PEER_RELIABLE_WINDOWS - 1) % ENET_PEER_RELIABLE_WINDOWS] >= ENET_PEER_RELIABLE_WINDOW_SIZE ||
-                            channel->usedReliableWindows & ((((1u << (ENET_PEER_FREE_RELIABLE_WINDOWS + 2)) - 1) << reliableWindow) | 
-                            (((1u << (ENET_PEER_FREE_RELIABLE_WINDOWS + 2)) - 1) >> (ENET_PEER_RELIABLE_WINDOWS - reliableWindow))))) 
+                            channel->usedReliableWindows & ((((1u << (ENET_PEER_FREE_RELIABLE_WINDOWS + 2)) - 1) << reliableWindow) |
+                            (((1u << (ENET_PEER_FREE_RELIABLE_WINDOWS + 2)) - 1) >> (ENET_PEER_RELIABLE_WINDOWS - reliableWindow)))))
                     {
                         windowWrap = 1;
                         currentSendReliableCommand = enet_list_end (& peer->outgoingSendReliableCommands);
@@ -3138,7 +3139,7 @@ extern "C" {
 
     static int enet_protocol_send_outgoing_commands(ENetHost *host, ENetEvent *event, int checkForTimeouts) {
         enet_uint8 headerData[
-            sizeof(ENetProtocolHeader) 
+            sizeof(ENetProtocolHeader)
 #ifdef ENET_USE_MORE_PEERS
             + sizeof(enet_uint8) // additional peer id byte
 #endif
@@ -6036,7 +6037,7 @@ extern "C" {
             case ENET_SOCKOPT_IPV6_V6ONLY:
                 result = setsockopt(socket, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&value, sizeof(int));
                 break;
-            
+
             case ENET_SOCKOPT_TTL:
                 result = setsockopt(socket, IPPROTO_IP, IP_TTL, (char *)&value, sizeof(int));
                 break;
