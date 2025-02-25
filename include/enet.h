@@ -56,7 +56,7 @@
 #define ENET_TIME_LESS_EQUAL(a, b) (! ENET_TIME_GREATER (a, b))
 #define ENET_TIME_GREATER_EQUAL(a, b) (! ENET_TIME_LESS (a, b))
 #define ENET_TIME_DIFFERENCE(a, b) ((a) - (b) >= ENET_TIME_OVERFLOW ? (b) - (a) : (a) - (b))
-#define ENET_TEST_1 0
+#define ENET_TEST_1 1
 
 // =======================================================================//
 // !
