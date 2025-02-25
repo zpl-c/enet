@@ -4526,7 +4526,7 @@ extern "C" {
         #else
             int type;
             socklen_t len = sizeof(type);
-            if (getsockopt(socket, SOL_SOCKET, SO_TYPE, &type, &len) == 0) {
+            if (getsockopt(*socket, SOL_SOCKET, SO_TYPE, &type, &len) == 0) {
                 return (type == SOCK_DGRAM);
             }
         #endif
