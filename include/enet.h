@@ -43,7 +43,7 @@
 
 #define ENET_VERSION_MAJOR 2
 #define ENET_VERSION_MINOR 6
-#define ENET_VERSION_PATCH 1
+#define ENET_VERSION_PATCH 2
 #define ENET_VERSION_CREATE(major, minor, patch) (((major)<<16) | ((minor)<<8) | (patch))
 #define ENET_VERSION_GET_MAJOR(version) (((version)>>16)&0xFF)
 #define ENET_VERSION_GET_MINOR(version) (((version)>>8)&0xFF)
@@ -3149,11 +3149,13 @@ extern "C" {
         int sentLength = 0;
         size_t shouldCompress = 0;
         ENetList sentUnreliableCommands;
+        int sendPass = 0, continueSending = 0;
+        ENetPeer *currentPeer;
 
         enet_list_clear (&sentUnreliableCommands);
 
-        for (int sendPass = 0, continueSending = 0; sendPass <= continueSending; ++ sendPass)
-            for(ENetPeer *currentPeer = host->peers; currentPeer < &host->peers[host->peerCount]; ++currentPeer) {
+        for (; sendPass <= continueSending; ++ sendPass)
+            for(currentPeer = host->peers; currentPeer < &host->peers[host->peerCount]; ++currentPeer) {
                 if (currentPeer->state == ENET_PEER_STATE_DISCONNECTED || currentPeer->state == ENET_PEER_STATE_ZOMBIE || (sendPass > 0 && ! (currentPeer->flags & ENET_PEER_FLAG_CONTINUE_SENDING))) {
                     continue;
                 }
