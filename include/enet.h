@@ -4554,7 +4554,7 @@ extern "C" {
 
     ENetHost * enet_host_create(const ENetAddress *address, size_t peerCount, size_t channelLimit, enet_uint32 incomingBandwidth, enet_uint32 outgoingBandwidth) {
         /* Create and use internal socket. */
-        enet_host_create_ext(address, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth, NULL);
+        return enet_host_create_ext(address, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth, NULL);
     } /* enet_host_create */
 
     ENetHost * enet_host_create_ext(const ENetAddress *address, size_t peerCount, size_t channelLimit, enet_uint32 incomingBandwidth, enet_uint32 outgoingBandwidth, ENetSocket* externalUDPSocket) {
