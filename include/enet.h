@@ -4519,6 +4519,23 @@ extern "C" {
 // !
 // =======================================================================//
 
+    int is_udp_socket(const ENetSocket* socket) {
+        #ifdef _WIN32
+            WSAPROTOCOL_INFO info;
+            int len = sizeof(info);
+            if (getsockopt(*socket, SOL_SOCKET, SO_PROTOCOL_INFO, (char*)&info, &len) == 0) {
+                return (info.iSocketType == SOCK_DGRAM);
+            }
+        #else
+            int type;
+            socklen_t len = sizeof(type);
+            if (getsockopt(*socket, SOL_SOCKET, SO_TYPE, &type, &len) == 0) {
+                return (type == SOCK_DGRAM);
+            }
+        #endif
+            return 0; // Error: Could not determine socket type
+    }
+
     /** Creates a host for communicating to peers.
      *
      *  @param address   the address at which other peers may connect to this host.  If NULL, then no peers may connect to the host.
@@ -4534,7 +4551,13 @@ extern "C" {
      *  the window size of a connection which limits the amount of reliable packets that may be in transit
      *  at any given time.
      */
+
     ENetHost * enet_host_create(const ENetAddress *address, size_t peerCount, size_t channelLimit, enet_uint32 incomingBandwidth, enet_uint32 outgoingBandwidth) {
+        /* Create and use internal socket. */
+        enet_host_create_ext(address, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth, NULL);
+    } /* enet_host_create */
+
+    ENetHost * enet_host_create_ext(const ENetAddress *address, size_t peerCount, size_t channelLimit, enet_uint32 incomingBandwidth, enet_uint32 outgoingBandwidth, ENetSocket* externalUDPSocket) {
         ENetHost *host;
         ENetPeer *currentPeer;
 
