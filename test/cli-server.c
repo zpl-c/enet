@@ -38,7 +38,7 @@ void run_server() {
     address.host = ENET_HOST_ANY;
     address.port = 1234;
 
-    ENetHost* host = enet_host_create(&address, 4, 1, 0, 0);
+    ENetHost* host = enet_host_create(&address, 4, 1, 0, 0, NULL);
 
     if (!host) {
         printf("Failed to create server\n");
@@ -97,7 +97,7 @@ void run_client() {
     address.host = ENET_HOST_ANY;
     address.port = 1234;
 
-    ENetHost* host = enet_host_create(NULL, 1, 1, 0, 0);
+    ENetHost* host = enet_host_create(NULL, 1, 1, 0, 0, NULL);
 
     enet_address_set_host(&address, "127.0.0.1");
     address.port = 1234;
