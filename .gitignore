@@ -10,6 +10,7 @@ x64/
 
 # Other
 .DS_store
+.idea
 
 # local build scripts
 build.sh
