@@ -3654,13 +3654,15 @@ extern "C" {
      *  @retval < 0 on failure
      */
     int enet_peer_send(ENetPeer *peer, enet_uint8 channelID, ENetPacket *packet) {
-        ENetChannel *channel = &peer->channels[channelID];
+        ENetChannel *channel = NULL;
         ENetProtocol command;
         size_t fragmentLength;
 
         if (peer->state != ENET_PEER_STATE_CONNECTED || channelID >= peer->channelCount || packet->dataLength > peer->host->maximumPacketSize) {
             return -1;
         }
+
+        channel = &peer->channels[channelID];
 
         fragmentLength = peer->mtu - sizeof(ENetProtocolHeader) - sizeof(ENetProtocolSendFragment);
         if (peer->host->checksum != NULL) {
@@ -4141,7 +4143,12 @@ extern "C" {
     }
 
     void enet_peer_setup_outgoing_command(ENetPeer *peer, ENetOutgoingCommand *outgoingCommand) {
-        ENetChannel *channel = &peer->channels[outgoingCommand->command.header.channelID];
+        ENetChannel *channel = NULL;
+
+        if (outgoingCommand->command.header.channelID < peer->channelCount) {
+            channel = &peer->channels[outgoingCommand->command.header.channelID];
+        }
+
         peer->outgoingDataTotal += enet_protocol_command_size(outgoingCommand->command.header.command) + outgoingCommand->fragmentLength;
 
         if (outgoingCommand->command.header.channelID == 0xFF) {
