@@ -89,6 +89,13 @@ if(ENET_TEST)
     target_link_libraries(enet_test_extra_peers PRIVATE enet_test_interface)
     target_compile_definitions(enet_test_extra_peers PRIVATE ENET_USE_MORE_PEERS)
 
+    # Test unit
+    add_executable(enet_test_unit test/units/test_main.c)
+    target_link_libraries(enet_test_unit PRIVATE enet_test_interface)
+    target_include_directories(enet_test_unit INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/units/include
+    )
 endif()
 
 # -----------------------------
