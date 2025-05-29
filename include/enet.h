@@ -5055,6 +5055,7 @@ extern "C" {
             t.QuadPart |= f.dwLowDateTime;
             return (t);
         }
+        #ifndef WIN_PTHREADS_TIME_H
         int clock_gettime(int X, struct timespec *tv) {
             (void)X;
             LARGE_INTEGER t;
@@ -5093,6 +5094,7 @@ extern "C" {
             tv->tv_nsec = t.QuadPart % 1000000 * 1000;
             return (0);
         }
+        #endif
     #elif __APPLE__ && __MAC_OS_X_VERSION_MIN_REQUIRED < 101200
         #define CLOCK_MONOTONIC 0
 
