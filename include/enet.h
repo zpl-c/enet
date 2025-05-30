@@ -5101,7 +5101,7 @@ extern "C" {
     #elif __APPLE__ && __MAC_OS_X_VERSION_MIN_REQUIRED < 101200
         #define CLOCK_MONOTONIC 0
 
-        static int clock_gettime(int X, struct timespec *ts) {
+        int clock_gettime(int X, struct timespec *ts) {
             clock_serv_t cclock;
             mach_timespec_t mts;
 
