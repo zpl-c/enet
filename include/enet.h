@@ -5036,7 +5036,12 @@ extern "C" {
 // !
 // =======================================================================//
 
+    #define internal_clock_gettime clock_gettime
+
     #ifdef _WIN32
+        #undef internal_clock_gettime
+        #define internal_clock_gettime _clock_gettime
+
         static LARGE_INTEGER getFILETIMEoffset() {
             SYSTEMTIME s;
             FILETIME f;
@@ -5055,8 +5060,7 @@ extern "C" {
             t.QuadPart |= f.dwLowDateTime;
             return (t);
         }
-        #ifndef WIN_PTHREADS_TIME_H
-        int clock_gettime(int X, struct timespec *tv) {
+        int _clock_gettime(int X, struct timespec *tv) {
             (void)X;
             LARGE_INTEGER t;
             FILETIME f;
@@ -5094,11 +5098,10 @@ extern "C" {
             tv->tv_nsec = t.QuadPart % 1000000 * 1000;
             return (0);
         }
-        #endif
     #elif __APPLE__ && __MAC_OS_X_VERSION_MIN_REQUIRED < 101200
         #define CLOCK_MONOTONIC 0
 
-        int clock_gettime(int X, struct timespec *ts) {
+        static int clock_gettime(int X, struct timespec *ts) {
             clock_serv_t cclock;
             mach_timespec_t mts;
 
@@ -5128,9 +5131,9 @@ extern "C" {
 
         struct timespec ts;
     #if defined(CLOCK_MONOTONIC_RAW)
-        clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+        internal_clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
     #else
-        clock_gettime(CLOCK_MONOTONIC, &ts);
+        internal_clock_gettime(CLOCK_MONOTONIC, &ts);
     #endif
 
         static const uint64_t ns_in_s = 1000 * 1000 * 1000;
