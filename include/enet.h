@@ -5060,7 +5060,7 @@ extern "C" {
             t.QuadPart |= f.dwLowDateTime;
             return (t);
         }
-        int _clock_gettime(int X, struct timespec *tv) {
+        static int _clock_gettime(int X, struct timespec *tv) {
             (void)X;
             LARGE_INTEGER t;
             FILETIME f;
