@@ -5036,7 +5036,12 @@ extern "C" {
 // !
 // =======================================================================//
 
+    #define internal_clock_gettime clock_gettime
+
     #ifdef _WIN32
+        #undef internal_clock_gettime
+        #define internal_clock_gettime _clock_gettime
+
         static LARGE_INTEGER getFILETIMEoffset() {
             SYSTEMTIME s;
             FILETIME f;
@@ -5055,7 +5060,7 @@ extern "C" {
             t.QuadPart |= f.dwLowDateTime;
             return (t);
         }
-        int clock_gettime(int X, struct timespec *tv) {
+        static int _clock_gettime(int X, struct timespec *tv) {
             (void)X;
             LARGE_INTEGER t;
             FILETIME f;
@@ -5126,9 +5131,9 @@ extern "C" {
 
         struct timespec ts;
     #if defined(CLOCK_MONOTONIC_RAW)
-        clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+        internal_clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
     #else
-        clock_gettime(CLOCK_MONOTONIC, &ts);
+        internal_clock_gettime(CLOCK_MONOTONIC, &ts);
     #endif
 
         static const uint64_t ns_in_s = 1000 * 1000 * 1000;
