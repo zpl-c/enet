@@ -5803,8 +5803,15 @@ extern "C" {
 
         if (address != NULL) {
             address->host           = sin.sin6_addr;
-            address->port           = ENET_NET_TO_HOST_16(sin.sin6_port);
             address->sin6_scope_id  = sin.sin6_scope_id;
+            if (sin.sin6_family == AF_INET || (sin.sin6_family == AF_UNSPEC && sin.sin6_len == sizeof(struct sockaddr_in)))
+            {
+                enet_inaddr_map4to6(((struct sockaddr_in*)&sin)->sin_addr, &address->host);
+                address->sin6_scope_id = 0;
+            }
+            
+            address->port           = ENET_NET_TO_HOST_16(sin.sin6_port);
+            
         }
 
         return recvLength;
