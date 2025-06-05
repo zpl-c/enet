@@ -1,6 +1,6 @@
 {
   "name": "enet.c",
-  "version": "2.6.4",
+  "version": "2.6.5",
   "description": "ENet - Simple, lightweight and reliable UDP networking library written on pure C.",
   "main": "include/enet.h",
   "directories": {
