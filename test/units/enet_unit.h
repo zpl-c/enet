@@ -9,6 +9,49 @@
 #include <unistd.h>
 #endif
 
+#ifdef _WIN32
+#define TEST_SLEEP(ms) Sleep(ms)
+#else
+#define TEST_SLEEP(ms) usleep(ms * 1000);
+#endif
+
+
+#define ENET_EXPAND(x) x
+#define GET_MACRO(_1, _2, _3, NAME, ...) NAME
+
+#define OP_EQ(a, b) ((a) == (b))
+#define OP_NE(a, b) ((a) != (b))
+#define OP_CALL(op, a, b) (op(a, b))
+
+#define ASSERT_EQ(...) ENET_EXPAND( GET_MACRO(__VA_ARGS__, ASSERT_THAT_IMPL3, ASSERT_THAT_IMPL2)(ASSERT_EQ, OP_EQ, __VA_ARGS__) )
+#define ASSERT_NE(...) ENET_EXPAND( GET_MACRO(__VA_ARGS__, ASSERT_THAT_IMPL3, ASSERT_THAT_IMPL2)(ASSERT_NE, OP_NE, __VA_ARGS__) )
+
+#define ASSERT_THAT_IMPL2(cmd, op, a, b) \
+do { \
+    if (!OP_CALL(op, a, b)) { \
+        entry->failed += 1; \
+        fprintf(stderr, "%s(%s, %s)\n", #cmd, #a, #b); \
+        fprintf(stderr, "  Expected: %s\n", #b); \
+        fprintf(stderr, "  But was: %s\n", #a); \
+        fprintf(stderr, "at %s:%d\n", __FILE__, __LINE__); \
+        return; \
+    } \
+} while (0)
+
+
+#define ASSERT_THAT_IMPL3(cmd, op, a, b, m) \
+do { \
+    if (!OP_CALL(op, a, b)) { \
+        entry->failed += 1; \
+        fprintf(stderr, "%s\n", m); \
+        fprintf(stderr, "%s(%s, %s)\n", #cmd, #a, #b); \
+        fprintf(stderr, "  Expected: %s\n", #b); \
+        fprintf(stderr, "  But was: %s\n", #a); \
+        fprintf(stderr, "at %s:%d\n", __FILE__, __LINE__); \
+        return; \
+    } \
+} while (0)
+
 typedef struct _ENetTestEntry ENetTestEntry;
 
 typedef void (*ENetUnitTestFunc)(ENetTestEntry *entry);
@@ -21,18 +64,14 @@ typedef struct _ENetTestEntry {
 
 #define MAX_TESTS 8096
 
-static ENetTestEntry enet_test_entries[MAX_TESTS];
-static int enet_test_count = 0;
-
-#ifdef _WIN32
-#define ASSERT_SLEEP(ms) Sleep(ms)
+#ifdef ENET_UNIT_IMPLEMENTATION
+ENetTestEntry enet_test_entries[MAX_TESTS];
+int enet_test_count = 0;
 #else
-#define ASSERT_SLEEP(ms) usleep(ms * 1000);
+extern ENetTestEntry enet_test_entries[MAX_TESTS];
+extern int enet_test_count;
 #endif
 
-#define ENET_EXPAND(x) x
-#define GET_MACRO(_1, _2, _3, NAME, ...) NAME
-#define ASSERT_THAT(...) ENET_EXPAND( GET_MACRO(__VA_ARGS__, ASSERT_THAT_IMPL3, ASSERT_THAT_IMPL2)(__VA_ARGS__) )
 
 #define ENET_TEST_REGISTER(f) \
     do { \
@@ -65,33 +104,10 @@ static void __cdecl func(void)
     } \
     static void enet_test_##func(ENetTestEntry * entry)
 
-#define ASSERT_THAT_IMPL3(a, b, m) do { \
-    if ((a) != (b)) { \
-        entry->failed += 1; \
-        fprintf(stderr, "%s\n", m); \
-        fprintf(stderr, "ASSERT_THAT(%s, %s)\n", #a, #b); \
-        fprintf(stderr, "  Expected: %s\n", #b); \
-        fprintf(stderr, "  But was: %s\n", #a); \
-        fprintf(stderr, "at %s:%d\n", __FILE__, __LINE__); \
-        return; \
-    } \
-} while (0)
-
-#define ASSERT_THAT_IMPL2(a, b) do { \
-    if ((a) != (b)) { \
-        entry->failed += 1; \
-        fprintf(stderr, "ASSERT_THAT(%s, %s)\n", #a, #b); \
-        fprintf(stderr, "  Expected: %s\n", #b); \
-        fprintf(stderr, "  But was: %s\n", #a); \
-        fprintf(stderr, "at %s:%d\n", __FILE__, __LINE__); \
-        return; \
-    } \
-} while (0)
-
 static int run_all_tests(void) {
     int failed = 0;
     for (int i = 0; i < enet_test_count; ++i) {
-        const char* prefix = "enet_test_";
+        const char *prefix = "enet_test_";
         ENetTestEntry *entry = &enet_test_entries[i];
 
         const char *funcName = entry->name + strlen(prefix);

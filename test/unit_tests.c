@@ -1,8 +1,10 @@
 #include <stdio.h>
 
+#define ENET_UNIT_IMPLEMENTATION
+#define ENET_IMPLEMENTATION
+
 #include "enet.h"
-#include "enet_unit.h"
-#include "test_times.c"
+#include "units/enet_unit.h"
 
 int main() {
     if (enet_initialize() != 0) {
