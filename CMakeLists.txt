@@ -90,7 +90,7 @@ if(ENET_TEST)
     target_compile_definitions(enet_test_extra_peers PRIVATE ENET_USE_MORE_PEERS)
 
     # enet test units
-    file(GLOB UNIT_TEST_SOURCES "test/units/*.c")
+    file(GLOB UNIT_TEST_SOURCES CONFIGURE_DEPENDS "test/units/*.c")
     add_library(enet_test_units STATIC ${UNIT_TEST_SOURCES})
     target_include_directories(enet_test_units PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include

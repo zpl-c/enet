@@ -72,6 +72,7 @@ extern ENetTestEntry enet_test_entries[MAX_TESTS];
 extern int enet_test_count;
 #endif
 
+int run_all_tests(void);
 
 #define ENET_TEST_REGISTER(f) \
     do { \
@@ -104,7 +105,8 @@ static void __cdecl func(void)
     } \
     static void enet_test_##func(ENetTestEntry * entry)
 
-static int run_all_tests(void) {
+#ifdef ENET_UNIT_IMPLEMENTATION
+extern int run_all_tests(void) {
     int failed = 0;
     for (int i = 0; i < enet_test_count; ++i) {
         const char *prefix = "enet_test_";
@@ -131,5 +133,6 @@ static int run_all_tests(void) {
 
     return failed;
 }
+#endif
 
 #endif
