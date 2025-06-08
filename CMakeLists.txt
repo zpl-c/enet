@@ -83,20 +83,46 @@ if(ENET_TEST)
     # Default test
     add_executable(enet_test test/build.c)
     target_link_libraries(enet_test PRIVATE enet_test_interface)
-    
+
     # Test with more peers
     add_executable(enet_test_extra_peers test/build.c)
     target_link_libraries(enet_test_extra_peers PRIVATE enet_test_interface)
     target_compile_definitions(enet_test_extra_peers PRIVATE ENET_USE_MORE_PEERS)
 
-    # Test unit
-    add_executable(enet_test_unit test/units/test_main.c)
-    target_link_libraries(enet_test_unit PRIVATE enet_test_interface)
-    target_include_directories(enet_test_unit INTERFACE
+    # enet test units
+    file(GLOB UNIT_TEST_SOURCES CONFIGURE_DEPENDS "test/units/*.c")
+    add_library(enet_test_units STATIC ${UNIT_TEST_SOURCES})
+    target_include_directories(enet_test_units PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/test/units/include
     )
-endif()
+
+    # enet test units run
+    add_executable(enet_test_unit_run test/unit_tests.c)
+    target_link_libraries(enet_test_unit_run PRIVATE
+        enet_test_interface
+        enet_test_units
+    )
+
+    if (MSVC)
+        target_link_options(enet_test_unit_run PRIVATE
+            "/WHOLEARCHIVE:enet_test_units"
+        )
+    elseif (APPLE)
+        target_link_libraries(enet_test_unit_run PRIVATE
+            "-Wl,-force_load,${CMAKE_BINARY_DIR}/libenet_test_units.a"
+        )
+    else()
+        target_link_libraries(enet_test_unit_run PRIVATE
+            "-Wl,--whole-archive" enet_test_units "-Wl,--no-whole-archive"
+        )
+    endif()
+
+    target_include_directories(enet_test_unit_run PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/units/include
+    )
+endif ()
 
 # -----------------------------
 # 5) Installation
