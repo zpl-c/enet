@@ -8,9 +8,14 @@ option(ENET_STATIC "Build enet as a static library" ON)
 option(ENET_SHARED "Build enet as a shared library" OFF)
 option(ENET_TEST  "Build enet tests" ON)
 option(ENET_USE_MORE_PEERS  "Build enet with up to 65k peers support" OFF)
+option(ENET_IPV4_ONLY "Build enet with IPv4-only support (no IPv6)" OFF)
 
 if (ENET_USE_MORE_PEERS)
     add_definitions(-DENET_USE_MORE_PEERS)
+endif()
+
+if (ENET_IPV4_ONLY)
+    add_definitions(-DENET_IPV4_ONLY)
 endif()
 
 # -----------------------------
@@ -96,6 +101,11 @@ if(ENET_TEST)
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/test/units/include
     )
+
+    # Test with IPv4-only mode
+    add_executable(enet_test_ipv4_only test/build.c)
+    target_link_libraries(enet_test_ipv4_only PRIVATE enet_test_interface)
+    target_compile_definitions(enet_test_ipv4_only PRIVATE ENET_IPV4_ONLY)
 endif()
 
 # -----------------------------
