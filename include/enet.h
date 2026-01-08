@@ -222,9 +222,9 @@
 
 /* IPv4-only address constants */
 #ifdef _WIN32
-static const struct in_addr enet_v4_anyaddr   = { {{{ 0, 0, 0, 0 }}} };           /* 0.0.0.0 */
-static const struct in_addr enet_v4_noaddr    = { {{{ 255, 255, 255, 255 }}} };   /* 255.255.255.255 */
-static const struct in_addr enet_v4_localhost = { {{{ 127, 0, 0, 1 }}} };         /* 127.0.0.1 */
+static const struct in_addr enet_v4_anyaddr   = { { { 0, 0, 0, 0 } } };           /* 0.0.0.0 */
+static const struct in_addr enet_v4_noaddr    = { { { 255, 255, 255, 255 } } };   /* 255.255.255.255 */
+static const struct in_addr enet_v4_localhost = { { { 127, 0, 0, 1 } } };         /* 127.0.0.1 */
 #else
 static const struct in_addr enet_v4_anyaddr   = { 0 };                            /* 0.0.0.0 */
 static const struct in_addr enet_v4_noaddr    = { 0xFFFFFFFF };                   /* 255.255.255.255 */
