@@ -215,7 +215,31 @@
 #define ENET_MIN(x, y) ((x) < (y) ? (x) : (y))
 #define ENET_DIFFERENCE(x, y) ((x) < (y) ? (y) - (x) : (x) - (y))
 
+/* IPv4-only vs dual-stack (IPv6 with IPv4-mapped) mode */
+#ifdef ENET_IPV4_ONLY
+#define ENET_FEATURE_IPV4_ONLY 1
+#define ENET_FEATURE_IPV6 0
+
+/* IPv4-only address constants */
+#ifdef _WIN32
+static const struct in_addr enet_v4_anyaddr   = { { { 0, 0, 0, 0 } } };           /* 0.0.0.0 */
+static const struct in_addr enet_v4_noaddr    = { { { 255, 255, 255, 255 } } };   /* 255.255.255.255 */
+static const struct in_addr enet_v4_localhost = { { { 127, 0, 0, 1 } } };         /* 127.0.0.1 */
+#else
+static const struct in_addr enet_v4_anyaddr   = { 0 };                            /* 0.0.0.0 */
+static const struct in_addr enet_v4_noaddr    = { 0xFFFFFFFF };                   /* 255.255.255.255 */
+static const struct in_addr enet_v4_localhost = { 0x0100007F };                   /* 127.0.0.1 (little-endian) */
+#endif
+#define ENET_HOST_ANY       enet_v4_anyaddr
+#define ENET_HOST_BROADCAST 0xFFFFFFFFU
+#define ENET_PORT_ANY       0
+
+#else /* !ENET_IPV4_ONLY - dual-stack mode (default) */
+#define ENET_FEATURE_IPV4_ONLY 0
+#define ENET_FEATURE_IPV6 1
 #define ENET_IPV6           1
+
+/* IPv4-mapped IPv6 address constants (::ffff:x.x.x.x format) */
 static const struct in6_addr enet_v4_anyaddr   = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00 }}};
 static const struct in6_addr enet_v4_noaddr    = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }}};
 static const struct in6_addr enet_v4_localhost = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01 }}};
@@ -225,6 +249,7 @@ static const struct in6_addr enet_v6_localhost = {{{ 0x00, 0x00, 0x00, 0x00, 0x0
 #define ENET_HOST_ANY       in6addr_any
 #define ENET_HOST_BROADCAST 0xFFFFFFFFU
 #define ENET_PORT_ANY       0
+#endif /* ENET_IPV4_ONLY */
 
 #ifdef __cplusplus
 extern "C" {
@@ -515,7 +540,9 @@ extern "C" {
         ENET_SOCKOPT_SNDTIMEO  = 7,
         ENET_SOCKOPT_ERROR     = 8,
         ENET_SOCKOPT_NODELAY   = 9,
+#ifndef ENET_IPV4_ONLY
         ENET_SOCKOPT_IPV6_V6ONLY = 10,
+#endif
         ENET_SOCKOPT_TTL       = 11,
     } ENetSocketOption;
 
@@ -535,13 +562,24 @@ extern "C" {
      * but not for enet_host_create.  Once a server responds to a broadcast, the
      * address is updated from ENET_HOST_BROADCAST to the server's actual IP address.
      */
+#ifdef ENET_IPV4_ONLY
     typedef struct _ENetAddress {
-        struct in6_addr host;
-        enet_uint16 port;
-        enet_uint16 sin6_scope_id;
-    } ENetAddress;
+        struct in_addr host;      /* 4 bytes */
+        enet_uint16 port;         /* 2 bytes */
+        enet_uint16 sin6_scope_id;/* 2 bytes (unused in IPv4, kept for API compat) */
+    } ENetAddress;                /* Total: 8 bytes */
 
-    #define in6_equal(in6_addr_a, in6_addr_b) (memcmp(&in6_addr_a, &in6_addr_b, sizeof(struct in6_addr)) == 0)
+    #define enet_host_equal(a, b) ((a).s_addr == (b).s_addr)
+#else
+    typedef struct _ENetAddress {
+        struct in6_addr host;     /* 16 bytes */
+        enet_uint16 port;         /* 2 bytes */
+        enet_uint16 sin6_scope_id;/* 2 bytes */
+    } ENetAddress;                /* Total: 20 bytes */
+
+    #define enet_host_equal(a, b) (memcmp(&(a), &(b), sizeof(struct in6_addr)) == 0)
+    #define in6_equal(a, b) enet_host_equal(a, b)  /* backward compat */
+#endif
 
     /**
      * Packet flag bit constants.
@@ -1858,7 +1896,7 @@ extern "C" {
                 if (peer == NULL) {
                     peer = currentPeer;
                 }
-            } else if (currentPeer->state != ENET_PEER_STATE_CONNECTING && in6_equal(currentPeer->address.host, host->receivedAddress.host)) {
+            } else if (currentPeer->state != ENET_PEER_STATE_CONNECTING && enet_host_equal(currentPeer->address.host, host->receivedAddress.host)) {
                 if (currentPeer->address.port == host->receivedAddress.port && currentPeer->connectID == command->connect.connectID) {
                     return NULL;
                 }
@@ -2595,9 +2633,9 @@ extern "C" {
 
             if (peer->state == ENET_PEER_STATE_DISCONNECTED ||
                 peer->state == ENET_PEER_STATE_ZOMBIE ||
-                ((!in6_equal(host->receivedAddress.host , peer->address.host) ||
+                ((!enet_host_equal(host->receivedAddress.host , peer->address.host) ||
                 host->receivedAddress.port != peer->address.port) &&
-                1 /* no broadcast in ipv6  !in6_equal(peer->address.host , ENET_HOST_BROADCAST)*/) ||
+                1 /* no broadcast in ipv6  !enet_host_equal(peer->address.host , ENET_HOST_BROADCAST)*/) ||
                 (peer->outgoingPeerID < ENET_PROTOCOL_MAXIMUM_PEER_ID &&
                 sessionID != peer->incomingSessionID)
             ) {
@@ -4560,9 +4598,11 @@ extern "C" {
         memset(host->peers, 0, peerCount * sizeof(ENetPeer));
 
         host->socket = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
+#ifndef ENET_IPV4_ONLY
         if (host->socket != ENET_SOCKET_NULL) {
             enet_socket_set_option (host->socket, ENET_SOCKOPT_IPV6_V6ONLY, 0);
         }
+#endif
 
         if (host->socket == ENET_SOCKET_NULL || (address != NULL && enet_socket_bind(host->socket, address) < 0)) {
             if (host->socket != ENET_SOCKET_NULL) {
@@ -4579,7 +4619,9 @@ extern "C" {
         enet_socket_set_option(host->socket, ENET_SOCKOPT_BROADCAST, 1);
         enet_socket_set_option(host->socket, ENET_SOCKOPT_RCVBUF, ENET_HOST_RECEIVE_BUFFER_SIZE);
         enet_socket_set_option(host->socket, ENET_SOCKOPT_SNDBUF, ENET_HOST_SEND_BUFFER_SIZE);
+#ifndef ENET_IPV4_ONLY
         enet_socket_set_option(host->socket, ENET_SOCKOPT_IPV6_V6ONLY, 0);
+#endif
 
         if (address != NULL && enet_socket_get_address(host->socket, &host->address) < 0) {
             host->address = *address;
@@ -5172,6 +5214,76 @@ extern "C" {
         return (enet_uint32)(result_in_ns / ns_in_ms);
     }
 
+#ifdef ENET_IPV4_ONLY
+    /* IPv4-only host lookup */
+    int enet_inaddr_lookup_host(const char *name, bool nodns, ENetAddress *out) {
+        struct addrinfo hints, *resultList = NULL, *result = NULL;
+
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_family = AF_INET;  /* IPv4 only */
+
+        if (nodns) {
+            hints.ai_flags = AI_NUMERICHOST; /* prevent actual DNS lookups! */
+        }
+
+        if (getaddrinfo(name, NULL, &hints, &resultList) != 0) {
+            if (resultList) freeaddrinfo(resultList);
+            return -1;
+        }
+
+        for (result = resultList; result != NULL; result = result->ai_next) {
+            if (result->ai_addr != NULL && result->ai_family == AF_INET) {
+                out->host = ((struct sockaddr_in*)result->ai_addr)->sin_addr;
+                out->sin6_scope_id = 0;
+                freeaddrinfo(resultList);
+                return 0;
+            }
+        }
+        freeaddrinfo(resultList);
+        return -1;
+    }
+
+    int enet_address_set_host_ip_new(ENetAddress *address, const char *name) {
+        return enet_inaddr_lookup_host(name, true, address);
+    }
+
+    int enet_address_set_host_new(ENetAddress *address, const char *name) {
+        return enet_inaddr_lookup_host(name, false, address);
+    }
+
+    int enet_address_get_host_ip_new(const ENetAddress *address, char *name, size_t nameLength) {
+        if (inet_ntop(AF_INET, &address->host, name, nameLength) == NULL) {
+            return -1;
+        }
+        return 0;
+    }
+
+    int enet_address_get_host_new(const ENetAddress *address, char *name, size_t nameLength) {
+        struct sockaddr_in sin;
+        memset(&sin, 0, sizeof(struct sockaddr_in));
+
+        int err;
+
+        sin.sin_family = AF_INET;
+        sin.sin_port = ENET_HOST_TO_NET_16(address->port);
+        sin.sin_addr = address->host;
+
+        err = getnameinfo((struct sockaddr *)&sin, sizeof(sin), name, nameLength, NULL, 0, NI_NAMEREQD);
+        if (!err) {
+            if (name != NULL && nameLength > 0 && !memchr(name, '\0', nameLength)) {
+                return -1;
+            }
+            return 0;
+        }
+        if (err != EAI_NONAME) {
+            return -1;
+        }
+
+        return enet_address_get_host_ip_new(address, name, nameLength);
+    }
+
+#else /* !ENET_IPV4_ONLY - dual-stack mode */
+
     void enet_inaddr_map4to6(struct in_addr in, struct in6_addr *out)
     {
         if (in.s_addr == 0x00000000) { /* 0.0.0.0 */
@@ -5284,6 +5396,8 @@ extern "C" {
 
         return enet_address_get_host_ip_new(address, name, nameLength);
     } /* enet_address_get_host_new */
+
+#endif /* ENET_IPV4_ONLY */
 
 // =======================================================================//
 // !
@@ -5493,6 +5607,58 @@ extern "C" {
         return 0;
     }
 
+#ifdef ENET_IPV4_ONLY
+    int enet_address_set_host_old(ENetAddress *address, const char *name) {
+        struct addrinfo hints, *resultList = NULL, *result = NULL;
+
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_family = AF_INET;  /* IPv4 only */
+
+        if (getaddrinfo(name, NULL, &hints, &resultList) != 0) {
+            return -1;
+        }
+
+        for (result = resultList; result != NULL; result = result->ai_next) {
+            if (result->ai_addr != NULL && result->ai_family == AF_INET) {
+                struct sockaddr_in *sin = (struct sockaddr_in *)result->ai_addr;
+                address->host = sin->sin_addr;
+                address->sin6_scope_id = 0;
+                freeaddrinfo(resultList);
+                return 0;
+            }
+        }
+        freeaddrinfo(resultList);
+
+        return enet_address_set_host_ip(address, name);
+    } /* enet_address_set_host_old */
+
+    int enet_address_get_host_ip_old(const ENetAddress *address, char *name, size_t nameLength) {
+        if (inet_ntop(AF_INET, &address->host, name, nameLength) == NULL) {
+            return -1;
+        }
+        return 0;
+    }
+
+    int enet_address_get_host_old(const ENetAddress *address, char *name, size_t nameLength) {
+        struct sockaddr_in sin;
+        int err;
+        memset(&sin, 0, sizeof(struct sockaddr_in));
+        sin.sin_family = AF_INET;
+        sin.sin_port = ENET_HOST_TO_NET_16(address->port);
+        sin.sin_addr = address->host;
+        err = getnameinfo((struct sockaddr *)&sin, sizeof(sin), name, nameLength, NULL, 0, NI_NAMEREQD);
+        if (!err) {
+            if (name != NULL && nameLength > 0 && !memchr(name, '\0', nameLength)) {
+                return -1;
+            }
+            return 0;
+        }
+        if (err != EAI_NONAME) {
+            return -1;
+        }
+        return enet_address_get_host_ip(address, name, nameLength);
+    } /* enet_address_get_host_old */
+#else
     int enet_address_set_host_old(ENetAddress *address, const char *name) {
         struct addrinfo hints, *resultList = NULL, *result = NULL;
 
@@ -5560,8 +5726,24 @@ extern "C" {
         }
         return enet_address_get_host_ip(address, name, nameLength);
     } /* enet_address_get_host_old */
+#endif
 
     int enet_socket_bind(ENetSocket socket, const ENetAddress *address) {
+#ifdef ENET_IPV4_ONLY
+        struct sockaddr_in sin;
+        memset(&sin, 0, sizeof(struct sockaddr_in));
+        sin.sin_family = AF_INET;
+
+        if (address != NULL) {
+            sin.sin_port = ENET_HOST_TO_NET_16(address->port);
+            sin.sin_addr = address->host;
+        } else {
+            sin.sin_port = 0;
+            sin.sin_addr = enet_v4_anyaddr;
+        }
+
+        return bind(socket, (struct sockaddr *)&sin, sizeof(struct sockaddr_in));
+#else
         struct sockaddr_in6 sin;
         memset(&sin, 0, sizeof(struct sockaddr_in6));
         sin.sin6_family = AF_INET6;
@@ -5577,9 +5759,24 @@ extern "C" {
         }
 
         return bind(socket, (struct sockaddr *)&sin, sizeof(struct sockaddr_in6));
+#endif
     }
 
     int enet_socket_get_address(ENetSocket socket, ENetAddress *address) {
+#ifdef ENET_IPV4_ONLY
+        struct sockaddr_in sin;
+        socklen_t sinLength = sizeof(struct sockaddr_in);
+
+        if (getsockname(socket, (struct sockaddr *)&sin, &sinLength) == -1) {
+            return -1;
+        }
+
+        address->host = sin.sin_addr;
+        address->port = ENET_NET_TO_HOST_16(sin.sin_port);
+        address->sin6_scope_id = 0;
+
+        return 0;
+#else
         struct sockaddr_in6 sin;
         socklen_t sinLength = sizeof(struct sockaddr_in6);
 
@@ -5592,6 +5789,7 @@ extern "C" {
         address->sin6_scope_id  = sin.sin6_scope_id;
 
         return 0;
+#endif
     }
 
     int enet_socket_listen(ENetSocket socket, int backlog) {
@@ -5599,7 +5797,11 @@ extern "C" {
     }
 
     ENetSocket enet_socket_create(ENetSocketType type) {
+#ifdef ENET_IPV4_ONLY
+        return socket(PF_INET, (int)type == ENET_SOCKET_TYPE_DATAGRAM ? SOCK_DGRAM : SOCK_STREAM, 0);
+#else
         return socket(PF_INET6, (int)type == ENET_SOCKET_TYPE_DATAGRAM ? SOCK_DGRAM : SOCK_STREAM, 0);
+#endif
     }
 
     int enet_socket_set_option(ENetSocket socket, ENetSocketOption option, int value) {
@@ -5646,9 +5848,11 @@ extern "C" {
                 result = setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (char *)&value, sizeof(int));
                 break;
 
+#ifndef ENET_IPV4_ONLY
             case ENET_SOCKOPT_IPV6_V6ONLY:
                 result = setsockopt(socket, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&value, sizeof(int));
                 break;
+#endif
 
             case ENET_SOCKOPT_TTL:
                 result = setsockopt(socket, IPPROTO_IP, IP_TTL, (char *)&value, sizeof(int));
@@ -5682,6 +5886,23 @@ extern "C" {
     }
 
     int enet_socket_connect(ENetSocket socket, const ENetAddress *address) {
+#ifdef ENET_IPV4_ONLY
+        struct sockaddr_in sin;
+        int result;
+
+        memset(&sin, 0, sizeof(struct sockaddr_in));
+
+        sin.sin_family = AF_INET;
+        sin.sin_port   = ENET_HOST_TO_NET_16(address->port);
+        sin.sin_addr   = address->host;
+
+        result = connect(socket, (struct sockaddr *)&sin, sizeof(struct sockaddr_in));
+        if (result == -1 && errno == EINPROGRESS) {
+            return 0;
+        }
+
+        return result;
+#else
         struct sockaddr_in6 sin;
         int result;
 
@@ -5698,9 +5919,29 @@ extern "C" {
         }
 
         return result;
+#endif
     }
 
     ENetSocket enet_socket_accept(ENetSocket socket, ENetAddress *address) {
+#ifdef ENET_IPV4_ONLY
+        int result;
+        struct sockaddr_in sin;
+        socklen_t sinLength = sizeof(struct sockaddr_in);
+
+        result = accept(socket, address != NULL ? (struct sockaddr *)&sin : NULL, address != NULL ? &sinLength : NULL);
+
+        if (result == -1) {
+            return ENET_SOCKET_NULL;
+        }
+
+        if (address != NULL) {
+            address->host = sin.sin_addr;
+            address->port = ENET_NET_TO_HOST_16(sin.sin_port);
+            address->sin6_scope_id = 0;
+        }
+
+        return result;
+#else
         int result;
         struct sockaddr_in6 sin;
         socklen_t sinLength = sizeof(struct sockaddr_in6);
@@ -5718,6 +5959,7 @@ extern "C" {
         }
 
         return result;
+#endif
     }
 
     int enet_socket_shutdown(ENetSocket socket, ENetSocketShutdown how) {
@@ -5732,12 +5974,26 @@ extern "C" {
 
     int enet_socket_send(ENetSocket socket, const ENetAddress *address, const ENetBuffer *buffers, size_t bufferCount) {
         struct msghdr msgHdr;
+#ifdef ENET_IPV4_ONLY
+        struct sockaddr_in sin;
+#else
         struct sockaddr_in6 sin;
+#endif
         int sentLength;
 
         memset(&msgHdr, 0, sizeof(struct msghdr));
 
         if (address != NULL) {
+#ifdef ENET_IPV4_ONLY
+            memset(&sin, 0, sizeof(struct sockaddr_in));
+
+            sin.sin_family = AF_INET;
+            sin.sin_port   = ENET_HOST_TO_NET_16(address->port);
+            sin.sin_addr   = address->host;
+
+            msgHdr.msg_name    = &sin;
+            msgHdr.msg_namelen = sizeof(struct sockaddr_in);
+#else
             memset(&sin, 0, sizeof(struct sockaddr_in6));
 
             sin.sin6_family     = AF_INET6;
@@ -5747,6 +6003,7 @@ extern "C" {
 
             msgHdr.msg_name    = &sin;
             msgHdr.msg_namelen = sizeof(struct sockaddr_in6);
+#endif
         }
 
         msgHdr.msg_iov    = (struct iovec *) buffers;
@@ -5774,14 +6031,22 @@ extern "C" {
 
     int enet_socket_receive(ENetSocket socket, ENetAddress *address, ENetBuffer *buffers, size_t bufferCount) {
         struct msghdr msgHdr;
+#ifdef ENET_IPV4_ONLY
+        struct sockaddr_in sin;
+#else
         struct sockaddr_in6 sin;
+#endif
         int recvLength;
 
         memset(&msgHdr, 0, sizeof(struct msghdr));
 
         if (address != NULL) {
             msgHdr.msg_name    = &sin;
+#ifdef ENET_IPV4_ONLY
+            msgHdr.msg_namelen = sizeof(struct sockaddr_in);
+#else
             msgHdr.msg_namelen = sizeof(struct sockaddr_in6);
+#endif
         }
 
         msgHdr.msg_iov    = (struct iovec *) buffers;
@@ -5802,9 +6067,15 @@ extern "C" {
         }
 
         if (address != NULL) {
+#ifdef ENET_IPV4_ONLY
+            address->host = sin.sin_addr;
+            address->port = ENET_NET_TO_HOST_16(sin.sin_port);
+            address->sin6_scope_id = 0;
+#else
             address->host           = sin.sin6_addr;
             address->port           = ENET_NET_TO_HOST_16(sin.sin6_port);
             address->sin6_scope_id  = sin.sin6_scope_id;
+#endif
         }
 
         return recvLength;
@@ -5900,6 +6171,68 @@ extern "C" {
         return (enet_uint64) timeGetTime();
     }
 
+#ifdef ENET_IPV4_ONLY
+    int enet_address_set_host_ip_old(ENetAddress *address, const char *name) {
+        enet_uint8 vals[4] = { 0, 0, 0, 0 };
+        int i;
+
+        for (i = 0; i < 4; ++i) {
+            const char *next = name + 1;
+            if (*name != '0') {
+                long val = strtol(name, (char **) &next, 10);
+                if (val < 0 || val > 255 || next == name || next - name > 3) {
+                    return -1;
+                }
+                vals[i] = (enet_uint8) val;
+            }
+
+            if (*next != (i < 3 ? '.' : '\0')) {
+                return -1;
+            }
+            name = next + 1;
+        }
+
+        memcpy(&address->host, vals, sizeof(enet_uint32));
+        return 0;
+    }
+
+    int enet_address_set_host_old(ENetAddress *address, const char *name) {
+        struct hostent *hostEntry = NULL;
+        hostEntry = gethostbyname(name);
+
+        if (hostEntry == NULL || hostEntry->h_addrtype != AF_INET) {
+            return enet_address_set_host_ip_old(address, name);
+        }
+
+        address->host.s_addr = *(enet_uint32 *)hostEntry->h_addr_list[0];
+        address->sin6_scope_id = 0;
+        return 0;
+    }
+
+    int enet_address_get_host_ip_old(const ENetAddress *address, char *name, size_t nameLength) {
+        if (inet_ntop(AF_INET, (PVOID)&address->host, name, nameLength) == NULL) {
+            return -1;
+        }
+        return 0;
+    }
+
+    int enet_address_get_host_old(const ENetAddress *address, char *name, size_t nameLength) {
+        struct in_addr in;
+        struct hostent *hostEntry = NULL;
+        in = address->host;
+        hostEntry = gethostbyaddr((char *)&in, sizeof(struct in_addr), AF_INET);
+        if (hostEntry == NULL) {
+            return enet_address_get_host_ip(address, name, nameLength);
+        } else {
+            size_t hostLen = strlen(hostEntry->h_name);
+            if (hostLen >= nameLength) {
+                return -1;
+            }
+            memcpy(name, hostEntry->h_name, hostLen + 1);
+        }
+        return 0;
+    }
+#else
     int enet_address_set_host_ip_old(ENetAddress *address, const char *name) {
         enet_uint8 vals[4] = { 0, 0, 0, 0 };
         int i;
@@ -5968,8 +6301,23 @@ extern "C" {
         }
         return 0;
     }
+#endif
 
     int enet_socket_bind(ENetSocket socket, const ENetAddress *address) {
+#ifdef ENET_IPV4_ONLY
+        struct sockaddr_in sin = {0};
+        sin.sin_family = AF_INET;
+
+        if (address != NULL) {
+            sin.sin_port = ENET_HOST_TO_NET_16(address->port);
+            sin.sin_addr = address->host;
+        } else {
+            sin.sin_port = 0;
+            sin.sin_addr = enet_v4_anyaddr;
+        }
+
+        return bind(socket, (struct sockaddr *)&sin, sizeof(struct sockaddr_in)) == SOCKET_ERROR ? -1 : 0;
+#else
         struct sockaddr_in6 sin = {0};
         sin.sin6_family = AF_INET6;
 
@@ -5984,9 +6332,24 @@ extern "C" {
         }
 
         return bind(socket, (struct sockaddr *) &sin, sizeof(struct sockaddr_in6)) == SOCKET_ERROR ? -1 : 0;
+#endif
     }
 
     int enet_socket_get_address(ENetSocket socket, ENetAddress *address) {
+#ifdef ENET_IPV4_ONLY
+        struct sockaddr_in sin = {0};
+        int sinLength = sizeof(struct sockaddr_in);
+
+        if (getsockname(socket, (struct sockaddr *)&sin, &sinLength) == -1) {
+            return -1;
+        }
+
+        address->host = sin.sin_addr;
+        address->port = ENET_NET_TO_HOST_16(sin.sin_port);
+        address->sin6_scope_id = 0;
+
+        return 0;
+#else
         struct sockaddr_in6 sin = {0};
         int sinLength = sizeof(struct sockaddr_in6);
 
@@ -5999,6 +6362,7 @@ extern "C" {
         address->sin6_scope_id  = sin.sin6_scope_id;
 
         return 0;
+#endif
     }
 
     int enet_socket_listen(ENetSocket socket, int backlog) {
@@ -6006,7 +6370,11 @@ extern "C" {
     }
 
     ENetSocket enet_socket_create(ENetSocketType type) {
+#ifdef ENET_IPV4_ONLY
+        return socket(PF_INET, type == ENET_SOCKET_TYPE_DATAGRAM ? SOCK_DGRAM : SOCK_STREAM, 0);
+#else
         return socket(PF_INET6, type == ENET_SOCKET_TYPE_DATAGRAM ? SOCK_DGRAM : SOCK_STREAM, 0);
+#endif
     }
 
     int enet_socket_set_option(ENetSocket socket, ENetSocketOption option, int value) {
@@ -6047,10 +6415,12 @@ extern "C" {
                 result = setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (char *)&value, sizeof(int));
                 break;
 
+#ifndef ENET_IPV4_ONLY
             case ENET_SOCKOPT_IPV6_V6ONLY:
                 result = setsockopt(socket, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&value, sizeof(int));
                 break;
-            
+#endif
+
             case ENET_SOCKOPT_TTL:
                 result = setsockopt(socket, IPPROTO_IP, IP_TTL, (char *)&value, sizeof(int));
                 break;
@@ -6082,6 +6452,21 @@ extern "C" {
     }
 
     int enet_socket_connect(ENetSocket socket, const ENetAddress *address) {
+#ifdef ENET_IPV4_ONLY
+        struct sockaddr_in sin = {0};
+        int result;
+
+        sin.sin_family = AF_INET;
+        sin.sin_port   = ENET_HOST_TO_NET_16(address->port);
+        sin.sin_addr   = address->host;
+
+        result = connect(socket, (struct sockaddr *)&sin, sizeof(struct sockaddr_in));
+        if (result == SOCKET_ERROR && WSAGetLastError() != WSAEWOULDBLOCK) {
+            return -1;
+        }
+
+        return 0;
+#else
         struct sockaddr_in6 sin = {0};
         int result;
 
@@ -6096,9 +6481,29 @@ extern "C" {
         }
 
         return 0;
+#endif
     }
 
     ENetSocket enet_socket_accept(ENetSocket socket, ENetAddress *address) {
+#ifdef ENET_IPV4_ONLY
+        SOCKET result;
+        struct sockaddr_in sin = {0};
+        int sinLength = sizeof(struct sockaddr_in);
+
+        result = accept(socket, address != NULL ? (struct sockaddr *)&sin : NULL, address != NULL ? &sinLength : NULL);
+
+        if (result == INVALID_SOCKET) {
+            return ENET_SOCKET_NULL;
+        }
+
+        if (address != NULL) {
+            address->host = sin.sin_addr;
+            address->port = ENET_NET_TO_HOST_16(sin.sin_port);
+            address->sin6_scope_id = 0;
+        }
+
+        return result;
+#else
         SOCKET result;
         struct sockaddr_in6 sin = {0};
         int sinLength = sizeof(struct sockaddr_in6);
@@ -6116,6 +6521,7 @@ extern "C" {
         }
 
         return result;
+#endif
     }
 
     int enet_socket_shutdown(ENetSocket socket, ENetSocketShutdown how) {
@@ -6129,14 +6535,24 @@ extern "C" {
     }
 
     int enet_socket_send(ENetSocket socket, const ENetAddress *address, const ENetBuffer *buffers, size_t bufferCount) {
+#ifdef ENET_IPV4_ONLY
+        struct sockaddr_in sin = {0};
+#else
         struct sockaddr_in6 sin = {0};
+#endif
         DWORD sentLength = 0;
 
         if (address != NULL) {
+#ifdef ENET_IPV4_ONLY
+            sin.sin_family = AF_INET;
+            sin.sin_port   = ENET_HOST_TO_NET_16(address->port);
+            sin.sin_addr   = address->host;
+#else
             sin.sin6_family     = AF_INET6;
             sin.sin6_port       = ENET_HOST_TO_NET_16(address->port);
             sin.sin6_addr       = address->host;
             sin.sin6_scope_id   = address->sin6_scope_id;
+#endif
         }
 
         if (WSASendTo(socket,
@@ -6145,7 +6561,11 @@ extern "C" {
             &sentLength,
             0,
             address != NULL ? (struct sockaddr *) &sin : NULL,
+#ifdef ENET_IPV4_ONLY
+            address != NULL ? sizeof(struct sockaddr_in) : 0,
+#else
             address != NULL ? sizeof(struct sockaddr_in6) : 0,
+#endif
             NULL,
             NULL) == SOCKET_ERROR
         ) {
@@ -6156,9 +6576,14 @@ extern "C" {
     }
 
     int enet_socket_receive(ENetSocket socket, ENetAddress *address, ENetBuffer *buffers, size_t bufferCount) {
+#ifdef ENET_IPV4_ONLY
+        INT sinLength = sizeof(struct sockaddr_in);
+        struct sockaddr_in sin = {0};
+#else
         INT sinLength = sizeof(struct sockaddr_in6);
-        DWORD flags   = 0, recvLength = 0;
         struct sockaddr_in6 sin = {0};
+#endif
+        DWORD flags   = 0, recvLength = 0;
 
         if (WSARecvFrom(socket,
             (LPWSABUF) buffers,
@@ -6187,9 +6612,15 @@ extern "C" {
         }
 
         if (address != NULL) {
+#ifdef ENET_IPV4_ONLY
+            address->host = sin.sin_addr;
+            address->port = ENET_NET_TO_HOST_16(sin.sin_port);
+            address->sin6_scope_id = 0;
+#else
             address->host           = sin.sin6_addr;
             address->port           = ENET_NET_TO_HOST_16(sin.sin6_port);
             address->sin6_scope_id  = sin.sin6_scope_id;
+#endif
         }
 
         return (int) recvLength;
