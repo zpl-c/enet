@@ -1545,10 +1545,11 @@ extern "C" {
     static enet_uint32 crcTable[256];
 
     static enet_uint32 reflect_crc(int val, int bits) {
-        int result = 0, bit;
+        enet_uint32 result;
+        int bit;
 
         for (bit = 0; bit < bits; bit++) {
-            if (val & 1) { result |= 1 << (bits - 1 - bit); }
+            if (val & 1) { result |= 1u << (bits - 1 - bit); }
             val >>= 1;
         }
 
@@ -2969,7 +2970,7 @@ extern "C" {
 
             if (peer->earliestTimeout != 0 &&
                 (ENET_TIME_DIFFERENCE(host->serviceTime, peer->earliestTimeout) >= peer->timeoutMaximum ||
-                ((1u << (outgoingCommand->sendAttempts - 1)) >= peer->timeoutLimit &&
+                (outgoingCommand->sendAttempts > 32 || (1u << (outgoingCommand->sendAttempts - 1)) >= peer->timeoutLimit &&
                 ENET_TIME_DIFFERENCE(host->serviceTime, peer->earliestTimeout) >= peer->timeoutMinimum))
             ) {
                 enet_protocol_notify_disconnect_timeout(host, peer, event);
