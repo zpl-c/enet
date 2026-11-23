@@ -6072,9 +6072,28 @@ extern "C" {
             address->port = ENET_NET_TO_HOST_16(sin.sin_port);
             address->sin6_scope_id = 0;
 #else
-            address->host           = sin.sin6_addr;
-            address->port           = ENET_NET_TO_HOST_16(sin.sin6_port);
-            address->sin6_scope_id  = sin.sin6_scope_id;
+            /* A dual-stack socket bound to a v4-mapped address (::ffff:a.b.c.d) is demoted to a plain IPv4 one by
+             * some kernels -- XNU's udp6_bind sets INP_IPV4 and clears INP_IPV6 -- and recvmsg then reports the
+             * sender as a sockaddr_in. Read as a sockaddr_in6 that leaves the host all zeroes, so enet_host_equal
+             * matches no peer and the handshake never completes. Take the sender from the family it arrived in and
+             * keep it v4-mapped, the form the rest of ENet uses. The length is tested as well as the family, which
+             * some systems report as AF_UNSPEC. */
+            if (sin.sin6_family == AF_INET || msgHdr.msg_namelen == sizeof(struct sockaddr_in)) {
+                struct sockaddr_in sin4;
+                enet_uint8 * mapped = (enet_uint8 *) &address->host;
+
+                memcpy(&sin4, &sin, sizeof(struct sockaddr_in));
+                memset(mapped, 0, sizeof(struct in6_addr));
+                mapped[10] = 0xFF;
+                mapped[11] = 0xFF;
+                memcpy(mapped + 12, &sin4.sin_addr, sizeof(struct in_addr));
+                address->port           = ENET_NET_TO_HOST_16(sin4.sin_port);
+                address->sin6_scope_id  = 0;
+            } else {
+                address->host           = sin.sin6_addr;
+                address->port           = ENET_NET_TO_HOST_16(sin.sin6_port);
+                address->sin6_scope_id  = sin.sin6_scope_id;
+            }
 #endif
         }
 
