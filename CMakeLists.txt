@@ -106,6 +106,12 @@ if(ENET_TEST)
     add_executable(enet_test_ipv4_only test/build.c)
     target_link_libraries(enet_test_ipv4_only PRIVATE enet_test_interface)
     target_compile_definitions(enet_test_ipv4_only PRIVATE ENET_IPV4_ONLY)
+
+    # Test linking against the shared library (the tests above compile enet in)
+    if(TARGET enet_shared)
+        add_executable(enet_test_shared test/shared.c)
+        target_link_libraries(enet_test_shared PRIVATE enet_shared)
+    endif()
 endif()
 
 # -----------------------------
@@ -115,7 +121,13 @@ set(_enet_targets_to_install "")
 
 if(TARGET enet_static)
     list(APPEND _enet_targets_to_install enet_static)
-    set_target_properties(enet_static PROPERTIES OUTPUT_NAME "enet")
+    # With MSVC the shared library's import library is also named enet.lib, so
+    # when both are built the static one gets its own name instead of replacing it.
+    if(MSVC AND TARGET enet_shared)
+        set_target_properties(enet_static PROPERTIES OUTPUT_NAME "enet_static")
+    else()
+        set_target_properties(enet_static PROPERTIES OUTPUT_NAME "enet")
+    endif()
 endif()
 
 if(TARGET enet_shared)

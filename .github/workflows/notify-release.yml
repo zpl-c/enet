@@ -29,8 +29,10 @@ jobs:
           nofail: true
           color: "0x9999ff"
 
-  # CMake names both library targets "enet" (OUTPUT_NAME), so the shared builds
-  # come out as enet.dll, libenet.so and libenet.dylib.
+  # CMake names the shared library "enet" (OUTPUT_NAME), so it comes out as
+  # enet.dll (with its import library enet.lib), libenet.so and libenet.dylib.
+  # Tags older than 2.7.2 lack test/shared.c and the MSVC naming fix, so their
+  # enet.lib is the static library: the link test and enet.lib upload skip them.
   build-win:
     name: Test Windows
     runs-on: windows-latest
@@ -44,12 +46,22 @@ jobs:
         run: cmake --build build --config Release
       - name: Run unit tests
         run: cd build ; .\Release\enet_test.exe
+      - name: Link against the shared library through its import library
+        if: hashFiles('test/shared.c') != ''
+        run: cd build ; .\Release\enet_test_shared.exe
       - name: Release
         uses: softprops/action-gh-release@v3
         if: github.event_name == 'release' || inputs.tag != ''
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
           files: build/Release/enet.dll
+          fail_on_unmatched_files: true
+      - name: Release import library
+        uses: softprops/action-gh-release@v3
+        if: (github.event_name == 'release' || inputs.tag != '') && hashFiles('test/shared.c') != ''
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          files: build/Release/enet.lib
           fail_on_unmatched_files: true
 
   build-lin:
@@ -65,6 +77,9 @@ jobs:
         run: cmake --build build
       - name: Test build on Linux
         run: build/enet_test
+      - name: Link against the shared library
+        if: hashFiles('test/shared.c') != ''
+        run: build/enet_test_shared
       - name: Release
         uses: softprops/action-gh-release@v3
         if: github.event_name == 'release' || inputs.tag != ''
@@ -86,6 +101,9 @@ jobs:
         run: cmake --build build
       - name: Test build on macOS
         run: build/enet_test
+      - name: Link against the shared library
+        if: hashFiles('test/shared.c') != ''
+        run: build/enet_test_shared
       - name: Release
         uses: softprops/action-gh-release@v3
         if: github.event_name == 'release' || inputs.tag != ''
