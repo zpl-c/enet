@@ -121,9 +121,12 @@ set(_enet_targets_to_install "")
 
 if(TARGET enet_static)
     list(APPEND _enet_targets_to_install enet_static)
-    # With MSVC the shared library's import library is also named enet.lib, so
-    # when both are built the static one gets its own name instead of replacing it.
-    if(MSVC AND TARGET enet_shared)
+    # Where the shared library's import library is named like a static library
+    # (enet.lib with MSVC, clang-cl and clang targeting the MSVC ABI), building
+    # both would make the static one replace it, so it gets its own name instead.
+    if(TARGET enet_shared
+        AND "${CMAKE_STATIC_LIBRARY_PREFIX}" STREQUAL "${CMAKE_IMPORT_LIBRARY_PREFIX}"
+        AND "${CMAKE_STATIC_LIBRARY_SUFFIX}" STREQUAL "${CMAKE_IMPORT_LIBRARY_SUFFIX}")
         set_target_properties(enet_static PROPERTIES OUTPUT_NAME "enet_static")
     else()
         set_target_properties(enet_static PROPERTIES OUTPUT_NAME "enet")
