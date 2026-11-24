@@ -1545,7 +1545,7 @@ extern "C" {
     static enet_uint32 crcTable[256];
 
     static enet_uint32 reflect_crc(int val, int bits) {
-        enet_uint32 result;
+        enet_uint32 result = 0;
         int bit;
 
         for (bit = 0; bit < bits; bit++) {
