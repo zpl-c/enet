@@ -133,21 +133,37 @@ jobs:
       - name: Run the unit test suite on macOS
         run: build/enet_test_unit
 
+  build-ios:
+    name: Build iOS
+    runs-on: macOS-latest
+    needs: [prep]
+    steps:
+      - uses: actions/checkout@v1
+      # The tests cannot run on a phone here, but the header has to compile for one: it is a different platform of
+      # the same Apple SDK, and macOS-only code reaching iOS is not visible in any other job.
+      - name: Compile the header for iOS
+        run: |
+          printf '#define ENET_IMPLEMENTATION\n#include "enet.h"\nint main(void) { return 0; }\n' > ios_build.c
+          xcrun --sdk iphoneos clang -arch arm64 -miphoneos-version-min=13.0 -Iinclude -Werror -c ios_build.c -o ios_build.o
+      - name: Compile the header for the iOS simulator
+        run: |
+          xcrun --sdk iphonesimulator clang -arch x86_64 -mios-simulator-version-min=13.0 -Iinclude -Werror -c ios_build.c -o ios_build_sim.o
+
   done:
     name: Notify about status
     runs-on: ubuntu-latest
-    needs: [build-mac, build-lin, build-win, build-lin-ipv4, build-win-ipv4, build-win-shared]
+    needs: [build-mac, build-ios, build-lin, build-win, build-lin-ipv4, build-win-ipv4, build-win-shared]
     if: "always()"
     steps:
       - uses: inlife/actiord-action@v1
-        if: ${{ contains(needs.build-mac.result, 'success') && contains(needs.build-lin.result, 'success') && contains(needs.build-win.result, 'success') && contains(needs.build-lin-ipv4.result, 'success') && contains(needs.build-win-ipv4.result, 'success') && contains(needs.build-win-shared.result, 'success') }}
+        if: ${{ contains(needs.build-mac.result, 'success') && contains(needs.build-ios.result, 'success') && contains(needs.build-lin.result, 'success') && contains(needs.build-win.result, 'success') && contains(needs.build-lin-ipv4.result, 'success') && contains(needs.build-win-ipv4.result, 'success') && contains(needs.build-win-shared.result, 'success') }}
         with:
           url: ${{ secrets.ACTIORD_URL }}
           icon: https://avatars1.githubusercontent.com/u/26773913?s=200&v=4
           state: succeeded
 
       - uses: inlife/actiord-action@v1
-        if: ${{ !(contains(needs.build-mac.result, 'success') && contains(needs.build-lin.result, 'success') && contains(needs.build-win.result, 'success') && contains(needs.build-lin-ipv4.result, 'success') && contains(needs.build-win-ipv4.result, 'success') && contains(needs.build-win-shared.result, 'success')) }}
+        if: ${{ !(contains(needs.build-mac.result, 'success') && contains(needs.build-ios.result, 'success') && contains(needs.build-lin.result, 'success') && contains(needs.build-win.result, 'success') && contains(needs.build-lin-ipv4.result, 'success') && contains(needs.build-win-ipv4.result, 'success') && contains(needs.build-win-shared.result, 'success')) }}
         with:
           url: ${{ secrets.ACTIORD_URL }}
           discord_token: ${{ secrets.DISCORD_TOKEN }}
