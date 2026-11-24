@@ -35,7 +35,7 @@ jobs:
     name: Test Windows
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.tag || github.ref }}
       - name: Run cmake generator
@@ -45,7 +45,7 @@ jobs:
       - name: Run unit tests
         run: cd build ; .\Release\enet_test.exe
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: github.event_name == 'release' || inputs.tag != ''
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
@@ -56,7 +56,7 @@ jobs:
     name: Test Linux
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.tag || github.ref }}
       - name: Run cmake generator
@@ -66,7 +66,7 @@ jobs:
       - name: Test build on Linux
         run: build/enet_test
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: github.event_name == 'release' || inputs.tag != ''
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
@@ -77,7 +77,7 @@ jobs:
     name: Test macOS
     runs-on: macOS-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.tag || github.ref }}
       - name: Run cmake generator
@@ -87,7 +87,7 @@ jobs:
       - name: Test build on macOS
         run: build/enet_test
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: github.event_name == 'release' || inputs.tag != ''
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
