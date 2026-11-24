@@ -3,6 +3,7 @@
 #include "enet.h"
 #include "enet_unit.h"
 #include "test_times.c"
+#include "test_connect.c"
 
 int main() {
     if (enet_initialize() != 0) {

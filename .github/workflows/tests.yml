@@ -8,13 +8,17 @@ on:
       - review/**
     paths:
       - 'include/**'
+      - 'test/**'
       - 'CMakeLists.txt'
+      - '.github/workflows/tests.yml'
   pull_request:
     branches:
       - master
     paths:
       - 'include/**'
+      - 'test/**'
       - 'CMakeLists.txt'
+      - '.github/workflows/tests.yml'
 
 jobs:
   prep:
@@ -45,6 +49,8 @@ jobs:
         run: cd build ; .\Debug\enet_test_extra_peers.exe
       - name: Run unit tests with IPv4-only mode
         run: cd build ; .\Debug\enet_test_ipv4_only.exe
+      - name: Run the unit test suite
+        run: cd build ; .\Debug\enet_test_unit.exe
 
   build-win-ipv4:
     name: Test Windows (IPv4-only)
@@ -58,6 +64,8 @@ jobs:
         run: cmake --build build_ipv4
       - name: Run unit tests (IPv4-only)
         run: cd build_ipv4 ; .\Debug\enet_test.exe
+      - name: Run the unit test suite (IPv4-only)
+        run: cd build_ipv4 ; .\Debug\enet_test_unit.exe
 
   build-lin:
     name: Test Linux
@@ -75,6 +83,8 @@ jobs:
         run: build/enet_test_extra_peers
       - name: Test build on Linux with IPv4-only mode
         run: build/enet_test_ipv4_only
+      - name: Run the unit test suite on Linux
+        run: build/enet_test_unit
 
   build-lin-ipv4:
     name: Test Linux (IPv4-only)
@@ -88,6 +98,8 @@ jobs:
         run: cmake --build build_ipv4
       - name: Test build on Linux (IPv4-only)
         run: build_ipv4/enet_test
+      - name: Run the unit test suite on Linux (IPv4-only)
+        run: build_ipv4/enet_test_unit
 
   build-mac:
     name: Test macOS
@@ -103,6 +115,8 @@ jobs:
         run: build/enet_test
       - name: Test build on macOS with extra peers
         run: build/enet_test_extra_peers
+      - name: Run the unit test suite on macOS
+        run: build/enet_test_unit
 
   done:
     name: Notify about status
