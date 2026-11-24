@@ -4,10 +4,19 @@ on:
     types:
       - published
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to build and attach binaries to (e.g. v2.7.1). Leave empty to only build and test.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
 
 jobs:
   notify:
     name: Show a changelog
+    if: github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
       - uses: sarisia/actions-status-discord@v1
@@ -20,11 +29,15 @@ jobs:
           nofail: true
           color: "0x9999ff"
 
+  # CMake names both library targets "enet" (OUTPUT_NAME), so the shared builds
+  # come out as enet.dll, libenet.so and libenet.dylib.
   build-win:
     name: Test Windows
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - name: Run cmake generator
         run: cmake -B build -DENET_TEST=1 -DENET_SHARED=1
       - name: Run Windows build
@@ -32,16 +45,20 @@ jobs:
       - name: Run unit tests
         run: cd build ; .\Release\enet_test.exe
       - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release' || inputs.tag != ''
         with:
-          files: build/Release/enet_shared.dll
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          files: build/Release/enet.dll
+          fail_on_unmatched_files: true
 
   build-lin:
     name: Test Linux
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - name: Run cmake generator
         run: cmake -B build -DENET_TEST=1 -DENET_SHARED=1 -DCMAKE_BUILD_TYPE=Release
       - name: Run build on Linux
@@ -49,16 +66,20 @@ jobs:
       - name: Test build on Linux
         run: build/enet_test
       - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release' || inputs.tag != ''
         with:
-          files: build/libenet_shared.so
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          files: build/libenet.so
+          fail_on_unmatched_files: true
 
   build-mac:
     name: Test macOS
     runs-on: macOS-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - name: Run cmake generator
         run: cmake -B build -DENET_TEST=1 -DENET_SHARED=1 -DCMAKE_BUILD_TYPE=Release
       - name: Run build on macOS
@@ -66,7 +87,9 @@ jobs:
       - name: Test build on macOS
         run: build/enet_test
       - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release' || inputs.tag != ''
         with:
-          files: build/libenet_shared.dylib
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          files: build/libenet.dylib
+          fail_on_unmatched_files: true
