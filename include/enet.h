@@ -2970,7 +2970,7 @@ extern "C" {
 
             if (peer->earliestTimeout != 0 &&
                 (ENET_TIME_DIFFERENCE(host->serviceTime, peer->earliestTimeout) >= peer->timeoutMaximum ||
-                (outgoingCommand->sendAttempts > 32 || (1u << (outgoingCommand->sendAttempts - 1)) >= peer->timeoutLimit &&
+                ((outgoingCommand->sendAttempts > 32 || (1u << (outgoingCommand->sendAttempts - 1)) >= peer->timeoutLimit) &&
                 ENET_TIME_DIFFERENCE(host->serviceTime, peer->earliestTimeout) >= peer->timeoutMinimum))
             ) {
                 enet_protocol_notify_disconnect_timeout(host, peer, event);
